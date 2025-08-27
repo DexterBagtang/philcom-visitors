@@ -1,0 +1,19 @@
+flowchart TD
+    A([Start]) --> B["Visitor Arrives at Lobby"]
+    B --> C["Scan QR Code"]
+    C --> D["Fill Details:<br/>- Name<br/>- Person to Visit<br/>- Visitor Type<br/>- Purpose"]
+    D --> E["Submit Form"]
+    E --> F["Lobby Staff Validate Details & Countercheck via Visitor ID"]
+
+    F --> G{"Validation Successful?"}
+    G -- No --> H["Deny Entry & Provide Instructions"]
+    H --> I([End])
+    G -- Yes --> J["Issue Visitor Card"]
+    J --> K["Check-In Recorded"]
+    K --> L["Ongoing Visit for Purpose"]
+
+    L --> M{"Visit Finished?"}
+    M -- No --> L
+    M -- Yes --> N["Visitor Surrenders Card"]
+    N --> O["Check-Out Recorded"]
+    O --> P([End])

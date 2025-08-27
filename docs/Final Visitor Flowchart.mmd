@@ -1,0 +1,53 @@
+---
+config:
+  theme: redux
+  layout: dagre
+---
+flowchart TD
+    A([Start]) --> B["Visitor Arrives at Lobby"]
+    B --> C["Scan QR Code"]
+    C --> D["Fill Details:<br/>- Name<br/>- Company<br/>- Person to Visit<br/>- Purpose"]
+    D --> E["Submit Form"]
+    E --> F["Lobby Staff Validate Details & Counter-check via Visitor ID"]
+
+    F --> G{"Validation Successful?"}
+    G -- No --> H["Deny Entry & Provide Instructions"]
+    H --> I([End])
+    G -- Yes --> J["Issue Visitor Badge"]
+    J --> K["Check-In Recorded<br/>Status: Checked-In"]
+    K --> L["Notify Host"]
+    L --> M["Ongoing Visit"]
+
+    M --> N{"Visit Finished?"}
+    N -- No --> M
+    N -- Yes --> O["Visitor Returns to Lobby"]
+    O --> P["Return Badge to Front Desk"]
+    P --> Q["Check-Out Recorded & Update Status"]
+    Q --> R["Generate Reports"]
+    R --> S([End])
+
+    A:::startEnd
+    B:::process
+    C:::process
+    D:::process
+    E:::process
+    F:::process
+    G:::decision
+    H:::process
+    I:::startEnd
+    J:::badge
+    K:::system
+    L:::system
+    M:::process
+    N:::decision
+    O:::process
+    P:::badge
+    Q:::system
+    R:::system
+    S:::startEnd
+
+    classDef startEnd fill:#f9f9f9,stroke:#333,stroke-width:2px
+    classDef process fill:#e1f5fe,stroke:#0277bd,stroke-width:2px
+    classDef decision fill:#fff3e0,stroke:#f57c00,stroke-width:2px
+    classDef system fill:#e8f5e8,stroke:#388e3c,stroke-width:2px
+    classDef badge fill:#fce4ec,stroke:#ad1457,stroke-width:2px

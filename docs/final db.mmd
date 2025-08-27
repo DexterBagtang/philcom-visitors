@@ -1,0 +1,70 @@
+erDiagram
+    users {
+        int id PK
+        string name
+        string email UK
+        enum role "admin, staff"
+        boolean active
+        timestamp email_verified_at
+        string password
+        string remember_token
+        datetime created_at
+        datetime updated_at
+    }
+
+    visitors {
+        int id PK
+        string name
+        string company
+        string person_to_visit
+        string visit_purpose
+        datetime created_at
+        datetime updated_at
+    }
+
+    visits {
+        int id PK
+        int visitor_id FK
+        enum status "checked_in, ongoing, checked_out"
+        datetime check_in_time
+        datetime check_out_time
+        string validated_by
+        string id_type_checked
+        string id_number_checked
+        text validation_notes
+        datetime created_at
+        datetime updated_at
+    }
+
+    visitor_badges {
+        int id PK
+        string badge_number UK
+        enum status "available, assigned, lost, damaged"
+        string location
+        datetime created_at
+        datetime updated_at
+    }
+
+    badge_assignments {
+        int id PK
+        int visit_id FK
+        int badge_id FK
+        datetime assigned_at
+        datetime returned_at
+        text notes
+        datetime created_at
+        datetime updated_at
+    }
+
+    system_settings {
+        int id PK
+        string setting_key UK
+        text setting_value
+        string description
+        datetime updated_at
+    }
+
+%% Primary Relationships
+    visitors ||--o{ visits : "visitor_id"
+    visits ||--o{ badge_assignments : "visit_id"
+    visitor_badges ||--o{ badge_assignments : "badge_id"

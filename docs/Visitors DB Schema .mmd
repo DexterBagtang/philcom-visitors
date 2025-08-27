@@ -1,0 +1,124 @@
+  erDiagram
+    users {
+        int id PK
+        string name
+        string email UK
+        enum role "admin, staff, host"
+        boolean active
+        timestamp email_verified_at
+        string password
+        string remember_token
+        datetime created_at
+        datetime updated_at
+    }
+
+    hosts {
+        int id PK
+        string name
+        string email UK
+        string department
+        string phone
+        boolean active
+        datetime created_at
+        datetime updated_at
+    }
+
+    visitors {
+        int id PK
+        string name
+        string email
+        string phone
+        string company
+        datetime created_at
+        datetime updated_at
+    }
+
+    visits {
+        int id PK
+        int primary_visitor_id FK
+        enum status "planned, checked_in, meeting_in_progress, checked_out, declined"
+        boolean is_pre_registered
+        enum host_status "pending, confirmed, declined"
+        int responding_host_id FK
+        datetime host_responded_at
+        text host_decline_reason
+        int total_group_size
+        datetime check_in_time
+        datetime check_out_time
+        string visit_purpose
+        string kiosk_id
+        text notes
+        datetime created_at
+        datetime updated_at
+    }
+
+    visitor_badges {
+        int id PK
+        string badge_number UK
+        enum status "available, assigned, lost, damaged"
+        string location
+        datetime created_at
+        datetime updated_at
+    }
+
+    badge_assignments {
+        int id PK
+        int visit_id FK
+        int visitor_id FK
+        int badge_id FK
+        string visitor_id_type
+        string visitor_id_number
+        string visitor_id_name
+        datetime assigned_at
+        datetime returned_at
+        text notes
+        datetime created_at
+        datetime updated_at
+    }
+
+    visit_hosts {
+        int id PK
+        int visit_id FK
+        int host_id FK
+        datetime notified_at
+        datetime created_at
+        datetime updated_at
+    }
+
+    visit_group_members {
+        int id PK
+        int visit_id FK
+        int visitor_id FK
+        int badge_assignment_id FK
+        datetime created_at
+        datetime updated_at
+    }
+
+    system_settings {
+        int id PK
+        string setting_key UK
+        text setting_value
+        string description
+        datetime updated_at
+    }
+
+    %% Primary Visit Relationships
+    visitors ||--o{ visits : "primary_visitor_id"
+    hosts ||--o{ visits : "responding_host_id"
+
+    %% Host Assignment Relationships
+    visits ||--o{ visit_hosts : "visit_id"
+    hosts ||--o{ visit_hosts : "host_id"
+
+    %% Group Member Relationships
+    visits ||--o{ visit_group_members : "visit_id"
+    visitors ||--o{ visit_group_members : "visitor_id"
+
+    %% Badge System Relationships
+    visitor_badges ||--o{ badge_assignments : "badge_id"
+    visits ||--o{ badge_assignments : "visit_id"
+    visitors ||--o{ badge_assignments : "visitor_id"
+    badge_assignments ||--o{ visit_group_members : "badge_assignment_id"
+
+    %% User System (Note: Hosts could be linked to users if needed)
+    %% users ||--o{ hosts : "email" (potential relationship)

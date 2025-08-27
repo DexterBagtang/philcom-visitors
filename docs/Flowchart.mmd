@@ -1,0 +1,76 @@
+---
+config:
+  theme: redux
+  layout: dagre
+---
+flowchart TB
+    A["Start"] --> B{"Pre-Registration?"}
+    B -- Yes --> D["Add Planned Visitor Details"]
+    D --> E["Status: Planned"]
+    B -- No --> G["Visitor Arrives at Lobby"]
+    E --> G
+    G --> H["Tap Check-In"]
+    H --> I{"Registration Type"}
+    I -- "Pre-Registered" --> J["Enter Email/Phone"]
+    J --> K["Autofill Details"]
+    I -- "Walk-In" --> M["Fill Personal Form<br/>(Name, Company, Phone, Email)"]
+    K --> O["Select Host(s)"]
+    M --> O
+    O --> R["Review Details"]
+    R --> S["Submit"]
+    S --> T["Status: Checked-In"]
+    T --> U["Notify Host(s) / Lobby Calls Host(s)"]
+    U --> HC{"Host Confirms?"}
+    HC -- Yes --> ID["Visitor Surrenders Valid ID<br/>(Driver's License, Passport, etc.)"]
+    ID --> AB["System Selects Available Badge<br/>(Pre-made with Unique ID)"]
+    AB --> LB["Log Badge Assignment<br/>(Badge ID + Visitor Info)"]
+    LB --> IB["Issue Badge to Visitor<br/>(Hold Physical ID)"]
+    IB --> VM["Visitor Meets Host"]
+    HC -- No --> NM["Meeting Declined"]
+    NM --> CO["Auto Checkout"]
+    CO --> BB["End"]
+    VM --> OM["Ongoing Meeting"]
+    OM --> MF{"Meeting Finished?"}
+    MF -- Yes --> CB["Visitor Returns to Lobby"]
+    CB --> RB["Return Badge to Frontdesk"]
+    RB --> UB["Update Badge Status: Available"]
+    UB --> RI["Return Physical ID to Visitor"]
+    RI --> LCO["Log Checkout & Update Status"]
+    LCO --> AA["Generate Reports"]
+    AA --> BB
+     A:::startEnd
+     B:::decision
+     D:::process
+     E:::system
+     G:::process
+     H:::process
+     I:::decision
+     J:::process
+     K:::system
+     M:::process
+     O:::system
+     R:::process
+     S:::process
+     T:::system
+     U:::process
+     HC:::decision
+     AB:::badge
+     LB:::badge
+     UB:::badge
+     IB:::badge
+     VM:::process
+     NM:::process
+     CO:::system
+     BB:::startEnd
+     OM:::process
+     MF:::decision
+     CB:::process
+     RB:::badge
+     RI:::badge
+     LCO:::process
+     AA:::system
+    classDef startEnd fill:#f9f9f9,stroke:#333,stroke-width:2px
+    classDef process fill:#e1f5fe,stroke:#0277bd,stroke-width:2px
+    classDef decision fill:#fff3e0,stroke:#f57c00,stroke-width:2px
+    classDef system fill:#e8f5e8,stroke:#388e3c,stroke-width:2px
+    classDef badge fill:#fce4ec,stroke:#ad1457,stroke-width:2px
