@@ -23,7 +23,6 @@ export default function Index({badges}: BadgesProps) {
                     className="relative min-h-[100vh] flex-1 overflow-hidden rounded-xl border border-sidebar-border/70 p-4 md:min-h-min dark:border-sidebar-border">
 
                     <BadgesTable badges={badges} />
-
                 </div>
             </div>
         </AppLayout>

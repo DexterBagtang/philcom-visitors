@@ -14,7 +14,7 @@ import { getAvatarColor } from '@/pages/visitors/helpers/visitor-helpers.js';
 import { router } from '@inertiajs/react';
 import { useEchoPublic } from '@laravel/echo-react';
 import { flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-table';
-import { format } from 'date-fns';
+import { format, isAfter, isBefore, isPast, isYesterday, startOfToday } from 'date-fns';
 import {
     Activity,
     ArrowUpDown,
@@ -221,7 +221,6 @@ export default function VisitorsTableServerSide({ visits = {}, meta = {}, onRefr
     };
 
 
-
     // Fetch available badges
     useEffect(() => {
         fetchAvailableBadges();
@@ -384,6 +383,7 @@ export default function VisitorsTableServerSide({ visits = {}, meta = {}, onRefr
                 const status = row.getValue('status');
                 const visit = row.original;
                 const config = statusConfig[status];
+                console.log(visit);
 
                 return (
                     <div className="space-y-1">
@@ -400,6 +400,14 @@ export default function VisitorsTableServerSide({ visits = {}, meta = {}, onRefr
                                 </Badge>
                             </div>
                         )}
+                        {isBefore(visit.check_in_time, startOfToday()) && status !== 'checked_out' && (
+                            <div className="ml-4 flex items-center">
+                                <Badge variant="outline" className="border-red-200 bg-red-50 px-1 text-xs font-light text-red-700">
+                                    Overdue
+                                </Badge>
+                            </div>
+                        )}
+
                     </div>
                 );
             },

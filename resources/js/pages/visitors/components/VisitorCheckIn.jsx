@@ -169,23 +169,6 @@ const VisitorCheckIn = () => {
                         </div>
 
 
-                        {/* Countdown Display */}
-                        {/*<div className="bg-gray-50 p-3 rounded-lg w-full mb-4 border border-gray-200">*/}
-                        {/*    <div className="flex items-center justify-center gap-2 text-gray-600 mb-1">*/}
-                        {/*        <Clock className="w-4 h-4" />*/}
-                        {/*        <span className="text-xs font-medium">Auto-return in</span>*/}
-                        {/*    </div>*/}
-                        {/*    <div className="text-xl font-semibold text-gray-700 mb-1">*/}
-                        {/*        {countdown}s*/}
-                        {/*    </div>*/}
-                        {/*    <div className="w-full bg-gray-200 rounded-full h-1.5">*/}
-                        {/*        <div*/}
-                        {/*            className="bg-blue-500 h-1.5 rounded-full transition-all duration-1000 ease-linear"*/}
-                        {/*            style={{ width: `${(countdown / 10) * 100}%` }}*/}
-                        {/*        ></div>*/}
-                        {/*    </div>*/}
-                        {/*</div>*/}
-
 
                         {/* Action Buttons */}
                         <div className="flex flex-col sm:flex-row gap-3 w-full">
@@ -266,6 +249,39 @@ const VisitorCheckIn = () => {
                                 <User className="w-5 h-5 text-primary" /> Your Details
                             </h2>
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+
+                                {/* Name */}
+                                <div>
+                                    <Label>Full Name *</Label>
+                                    <Input
+                                        value={data.name}
+                                        onChange={(e) => setData('name', e.target.value)}
+                                        disabled={processing}
+                                        placeholder="e.g. John Doe"
+                                    />
+                                    {(clientErrors.name || errors.name) && (
+                                        <p className="text-sm text-red-600 mt-1">
+                                            {clientErrors.name || errors.name}
+                                        </p>
+                                    )}
+                                </div>
+
+                                {/* Company */}
+                                <div>
+                                    <Label>Company/Organization</Label>
+                                    <Input
+                                        value={data.company}
+                                        onChange={(e) => setData('company', e.target.value)}
+                                        disabled={processing}
+                                        placeholder="e.g. Acme Corp"
+                                    />
+                                    {(clientErrors.company || errors.company) && (
+                                        <p className="text-sm text-red-600 mt-1">
+                                            {clientErrors.company || errors.company}
+                                        </p>
+                                    )}
+                                </div>
+
                                 {/* Visitor Type */}
                                 <div>
                                     <Label>Visitor Type *</Label>
@@ -315,40 +331,7 @@ const VisitorCheckIn = () => {
                                             </p>
                                         )}
                                     </div>
-                                )}
-
-                                {/* Name */}
-                                <div>
-                                    <Label>Full Name *</Label>
-                                    <Input
-                                        value={data.name}
-                                        onChange={(e) => setData('name', e.target.value)}
-                                        disabled={processing}
-                                        placeholder="e.g. John Doe"
-                                    />
-                                    {(clientErrors.name || errors.name) && (
-                                        <p className="text-sm text-red-600 mt-1">
-                                            {clientErrors.name || errors.name}
-                                        </p>
-                                    )}
-                                </div>
-
-                                {/* Company */}
-                                <div>
-                                    <Label>Company/Organization</Label>
-                                    <Input
-                                        value={data.company}
-                                        onChange={(e) => setData('company', e.target.value)}
-                                        disabled={processing}
-                                        placeholder="e.g. Acme Corp"
-                                    />
-                                    {(clientErrors.company || errors.company) && (
-                                        <p className="text-sm text-red-600 mt-1">
-                                            {clientErrors.company || errors.company}
-                                        </p>
-                                    )}
-                                </div>
-                            </div>
+                                )}                            </div>
                         </div>
 
                         <hr className="border-t" />
