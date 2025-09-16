@@ -27,7 +27,7 @@ class DatabaseSeeder extends Seeder
             'password' => bcrypt('asdfasdf'),
         ]);
 
-        User::factory()->count(5)->create();
+//        User::factory()->count(5)->create();
 //
 //        // Visitor badges
         VisitorBadge::factory()->count(20)->create();

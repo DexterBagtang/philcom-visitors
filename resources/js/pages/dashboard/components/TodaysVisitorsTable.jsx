@@ -107,6 +107,7 @@ const QUICK_FILTERS = [
 const PAGE_SIZES = [5, 10, 20, 50];
 
 export default function TodaysVisitorsTable({ visitors, activeQuickFilter, onQuickFilterChange, onClearFilters, onRefresh }) {
+    console.log(visitors);
     // Table state
     const [sorting, setSorting] = useState([]);
     const [globalFilter, setGlobalFilter] = useState('');

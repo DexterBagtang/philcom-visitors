@@ -38,6 +38,7 @@ export default function Dashboard({ visits }) {
                     activeQuickFilter={activeFilter}
                     onQuickFilterChange={handleFilterChange}
                     onClearFilters={handleClearFilters}
+                    onRefresh={()=>{}}
                 />
             </div>
         </AppLayout>

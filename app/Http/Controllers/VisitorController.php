@@ -30,92 +30,138 @@ class VisitorController {
     /**
      * Handle visitor check-in submission
      */
+//    public function checkIn(Request $request)
+//    {
+////        dd($request->all());
+//        // Validate the incoming request
+//        $validator = Validator::make($request->all(), [
+//            'first_name' => 'required|string|max:255',
+//            'last_name' => 'required|string|max:255',
+//            'company' => 'nullable|string|max:255',
+//            'person_to_visit' => 'required|string|max:255',
+//            'visit_purpose' => 'required|string|max:1000',
+//            'visit_purpose_other' => 'required_if:visit_purpose,Others|string|max:255|nullable',
+//            'visitor_type' => 'required',
+//            'visitor_type_other' => 'required_if:visitor_type,Other|string|max:255|nullable',
+//        ]);
+//
+//
+//        if ($validator->fails()) {
+//            return redirect()->back()
+//                ->withErrors($validator)
+//                ->withInput();
+//        }
+//
+//        try {
+//            // Check if visitor already exists (by email and phone)
+//            $visitor = Visitor::where('name', $request->name)
+//                ->first();
+//
+//            // If visitor doesn't exist, create a new one
+//            if (!$visitor) {
+//                $visitor = Visitor::create([
+//                    'name' => $request->name,
+//                    'company' => $request->company,
+//                    'person_to_visit' => $request->person_to_visit,
+//                    'visit_purpose' => $request->visit_purpose,
+//                    'type' =>  $request->visitor_type,
+//                ]);
+//            } else {
+//                // Update existing visitor information if needed
+//                $visitor->update([
+//                    'name' => $request->name,
+//                    'company' => $request->company,
+//                    'person_to_visit' => $request->person_to_visit,
+//                    'visit_purpose' => $request->visit_purpose,
+//                    'type' =>  $request->visitor_type,
+//                ]);
+//            }
+//
+//            // Check if visitor has an active visit (not checked out)
+//            $activeVisit = Visit::where('visitor_id', $visitor->id)
+//                ->whereIn('status', ['checked_in', 'ongoing'])
+//                ->first();
+//
+//            if ($activeVisit) {
+//                return redirect()->back()
+//                    ->with('error', 'You already have an active visit. Please check out first before creating a new visit.');
+//            }
+//
+//            // Create a new visit record with 'checked_in' status
+//            $visit = Visit::create([
+//                'visitor_id' => $visitor->id,
+//                'status' => 'checked_in',
+//                'check_in_time' => now(),
+//                // These fields will be filled by staff during validation
+//                'validated_by' => null,
+//                'id_type_checked' => null,
+//                'id_number_checked' => null,
+//                'validation_notes' => null,
+//            ]);
+//
+//            // Log the activity
+//            \Log::info('New visitor check-in', [
+//                'visitor_id' => $visitor->id,
+//                'visit_id' => $visit->id,
+//                'name' => $visitor->name,
+//                'company' => $visitor->company,
+//                'person_to_visit' => $visitor->person_to_visit,
+//                'ip_address' => $request->ip(),
+//                'user_agent' => $request->userAgent(),
+//            ]);
+//
+////            event(new VisitorCreated($visitor));
+//            event(new VisitCreated($visit));
+//
+//
+//            // Redirect with success message
+//            return redirect()->back()
+//                ->with('success', 'Check-in successful! Please proceed to the reception desk.');
+//
+//        } catch (\Exception $e) {
+//            \Log::error('Visitor check-in failed', [
+//                'error' => $e->getMessage(),
+//                'request_data' => $request->all(),
+//            ]);
+//
+//            return redirect()->back()
+//                ->with('error', 'An error occurred during check-in. Please try again or contact reception.')
+//                ->withInput();
+//        }
+//    }
+
     public function checkIn(Request $request)
     {
-//        dd($request->all());
-        // Validate the incoming request
-        $validator = Validator::make($request->all(), [
-            'name' => 'required|string|max:255',
+        $validated = $request->validate([
+            'first_name' => 'required|string|max:255',
+            'last_name' => 'required|string|max:255',
             'company' => 'nullable|string|max:255',
             'person_to_visit' => 'required|string|max:255',
             'visit_purpose' => 'required|string|max:1000',
-            'visit_purpose_other' => 'required_if:visit_purpose,Others|string|max:255|nullable',
-            'visitor_type' => 'required',
-            'visitor_type_other' => 'required_if:visitor_type,Other|string|max:255|nullable',
+            'visitor_type' => 'required|string|max:255',
         ]);
 
-
-        if ($validator->fails()) {
-            return redirect()->back()
-                ->withErrors($validator)
-                ->withInput();
-        }
-
         try {
-            // Check if visitor already exists (by email and phone)
-            $visitor = Visitor::where('name', $request->name)
-                ->first();
+            // Always create a new visitor record for check-in
+            $visitor = Visitor::create([
+                'first_name' => $validated['first_name'],
+                'last_name' => $validated['last_name'],
+                'company' => $validated['company'] ?? null,
+                'person_to_visit' => $validated['person_to_visit'],
+                'visit_purpose' => $validated['visit_purpose'],
+                'type' => $validated['visitor_type'],
+            ]);
 
-            // If visitor doesn't exist, create a new one
-            if (!$visitor) {
-                $visitor = Visitor::create([
-                    'name' => $request->name,
-                    'company' => $request->company,
-                    'person_to_visit' => $request->person_to_visit,
-                    'visit_purpose' => $request->visit_purpose,
-                    'type' =>  $request->visitor_type,
-                ]);
-            } else {
-                // Update existing visitor information if needed
-                $visitor->update([
-                    'name' => $request->name,
-                    'company' => $request->company,
-                    'person_to_visit' => $request->person_to_visit,
-                    'visit_purpose' => $request->visit_purpose,
-                    'type' =>  $request->visitor_type,
-                ]);
-            }
-
-            // Check if visitor has an active visit (not checked out)
-            $activeVisit = Visit::where('visitor_id', $visitor->id)
-                ->whereIn('status', ['checked_in', 'ongoing'])
-                ->first();
-
-            if ($activeVisit) {
-                return redirect()->back()
-                    ->with('error', 'You already have an active visit. Please check out first before creating a new visit.');
-            }
-
-            // Create a new visit record with 'checked_in' status
+            // Create a visit record
             $visit = Visit::create([
                 'visitor_id' => $visitor->id,
                 'status' => 'checked_in',
                 'check_in_time' => now(),
-                // These fields will be filled by staff during validation
-                'validated_by' => null,
-                'id_type_checked' => null,
-                'id_number_checked' => null,
-                'validation_notes' => null,
             ]);
 
-            // Log the activity
-            \Log::info('New visitor check-in', [
-                'visitor_id' => $visitor->id,
-                'visit_id' => $visit->id,
-                'name' => $visitor->name,
-                'company' => $visitor->company,
-                'person_to_visit' => $visitor->person_to_visit,
-                'ip_address' => $request->ip(),
-                'user_agent' => $request->userAgent(),
-            ]);
-
-//            event(new VisitorCreated($visitor));
             event(new VisitCreated($visit));
 
-
-            // Redirect with success message
-            return redirect()->back()
-                ->with('success', 'Check-in successful! Please proceed to the reception desk.');
+            return redirect()->back()->with('success', 'Check-in successful! Please proceed to the reception desk.');
 
         } catch (\Exception $e) {
             \Log::error('Visitor check-in failed', [
@@ -128,6 +174,7 @@ class VisitorController {
                 ->withInput();
         }
     }
+
 
 
     public function index()

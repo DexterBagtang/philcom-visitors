@@ -19,13 +19,15 @@ const VisitorCheckIn = () => {
     const [isCountdownActive, setIsCountdownActive] = useState(false);
 
     const { data, setData, post, processing, errors, reset } = useForm({
-        name: '',
+        first_name: '',
+        last_name: '',
         company: '',
         person_to_visit: '',
         visit_purpose: '',
         visit_purpose_other: '',
         visitor_type: '',
-        visitor_type_other: ''
+        visitor_type_other: '',
+        agree: false,
     });
 
     // Countdown effect
@@ -60,13 +62,21 @@ const VisitorCheckIn = () => {
     const validateForm = () => {
         const newErrors = {};
 
-        if (!data.name.trim()) {
-            newErrors.name = "Name is required.";
-        } else if (data.name.length > 255) {
-            newErrors.name = "Name cannot exceed 255 characters.";
+        if (!data.first_name.trim()) {
+            newErrors.first_name = "Name is required.";
+        } else if (data.first_name.length > 255) {
+            newErrors.first_name = "Name cannot exceed 255 characters.";
         }
 
-        if (data.company && data.company.length > 255) {
+        if (!data.last_name.trim()) {
+            newErrors.last_name = "Name is required.";
+        } else if (data.last_name.length > 255) {
+            newErrors.last_name = "Name cannot exceed 255 characters.";
+        }
+
+        if (!data.company.trim()) {
+            newErrors.company = "Company/Organization is required.";
+        } else if (data.company && data.company.length > 255) {
             newErrors.company = "Company cannot exceed 255 characters.";
         }
 
@@ -110,6 +120,7 @@ const VisitorCheckIn = () => {
         e.preventDefault();
         if (!validateForm()) return;
 
+
         post('/visitor/check-in', {
             onSuccess: () => {
                 setSubmitted(true);
@@ -131,7 +142,8 @@ const VisitorCheckIn = () => {
 
         // Explicitly reset all form data
         setData({
-            name: '',
+            first_name: '',
+            last_name: '',
             company: '',
             person_to_visit: '',
             visit_purpose: '',
@@ -164,7 +176,6 @@ const VisitorCheckIn = () => {
                             <ol className="list-decimal list-inside space-y-1 text-sm text-blue-800">
                                 <li><span className="font-semibold">Present your ID</span> to the reception staff</li>
                                 <li><span className="font-semibold">Receive your visitor badge</span></li>
-                                <li><span className="font-semibold">Wait for your host</span> to be notified</li>
                             </ol>
                         </div>
 
@@ -214,66 +225,68 @@ const VisitorCheckIn = () => {
                     <Separator className="w-3/4 my-2" />
 
                     <div className="text-center">
-                        <h1 className="text-3xl font-bold flex items-center justify-center gap-2">
+                        <h3 className="text-2xl font-bold flex items-center justify-center gap-2">
                             <UserPlus className="w-7 h-7 text-primary" />
-                            Visitor Check-in
-                        </h1>
+                            Visitors Form
+                        </h3>
                         <p className="text-muted-foreground">
-                            Please fill in your details to check in
+                            Please fill in your details.
                         </p>
-                        {/*<div className="mt-2 inline-flex items-center gap-2 bg-primary/10 text-primary px-3 py-1 rounded-full text-sm font-medium">*/}
-                        {/*    <CheckCircle2 className="w-4 h-4" />*/}
-                        {/*    This is the official visitor check-in form*/}
-                        {/*</div>*/}
+                        <p className="text-sm text-muted-foreground mt-2">
+                            <RequiredMark /> indicates required fields
+                        </p>
                     </div>
                 </CardHeader>
 
                 <CardContent>
-                    {flash?.error && (
-                        <Alert variant="destructive" className="mb-4">
-                            <AlertTitle>Error</AlertTitle>
-                            <AlertDescription>{flash.error}</AlertDescription>
-                        </Alert>
-                    )}
-                    {flash?.success && (
-                        <Alert className="mb-4">
-                            <AlertTitle>Success</AlertTitle>
-                            <AlertDescription>{flash.success}</AlertDescription>
-                        </Alert>
-                    )}
-
                     <form onSubmit={handleSubmit} className="space-y-6">
                         {/* --- Your Details --- */}
                         <div>
                             <h2 className="text-lg font-semibold flex items-center gap-2 mb-2">
                                 <User className="w-5 h-5 text-primary" /> Your Details
                             </h2>
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
 
                                 {/* Name */}
                                 <div>
-                                    <Label>Full Name *</Label>
+                                    <Label>First Name  <RequiredMark /></Label>
                                     <Input
-                                        value={data.name}
-                                        onChange={(e) => setData('name', e.target.value)}
+                                        value={data.first_name}
+                                        onChange={(e) => setData('first_name', e.target.value)}
                                         disabled={processing}
-                                        placeholder="e.g. John Doe"
+                                        placeholder="Enter First Name"
                                     />
-                                    {(clientErrors.name || errors.name) && (
+                                    {(clientErrors.first_name || errors.first_name) && (
                                         <p className="text-sm text-red-600 mt-1">
-                                            {clientErrors.name || errors.name}
+                                            {clientErrors.first_name || errors.first_name}
+                                        </p>
+                                    )}
+                                </div>
+
+                                <div>
+                                    <Label>Last Name <RequiredMark /></Label>
+                                    <Input
+                                        value={data.last_name}
+                                        onChange={(e) => setData('last_name', e.target.value)}
+                                        disabled={processing}
+                                        placeholder="Enter Last Name"
+                                    />
+                                    {(clientErrors.last_name || errors.last_name) && (
+                                        <p className="text-sm text-red-600 mt-1">
+                                            {clientErrors.last_name || errors.last_name}
                                         </p>
                                     )}
                                 </div>
 
                                 {/* Company */}
                                 <div>
-                                    <Label>Company/Organization</Label>
+                                    <Label>Company/Organization <RequiredMark /></Label>
                                     <Input
                                         value={data.company}
                                         onChange={(e) => setData('company', e.target.value)}
                                         disabled={processing}
-                                        placeholder="e.g. Acme Corp"
+                                        placeholder="Enter Company/Organization"
                                     />
                                     {(clientErrors.company || errors.company) && (
                                         <p className="text-sm text-red-600 mt-1">
@@ -284,7 +297,7 @@ const VisitorCheckIn = () => {
 
                                 {/* Visitor Type */}
                                 <div>
-                                    <Label>Visitor Type *</Label>
+                                    <Label>Visitor Type <RequiredMark /></Label>
                                     <Select
                                         value={data.visitor_type}
                                         onValueChange={(value) => {
@@ -318,7 +331,7 @@ const VisitorCheckIn = () => {
                                 {/* If "Other" selected */}
                                 {isOtherType && (
                                     <div className="mb-4">
-                                        <Label>Specify Visitor Type *</Label>
+                                        <Label>Specify Visitor Type <RequiredMark /></Label>
                                         <Input
                                             value={data.visitor_type_other}
                                             onChange={(e) => setData('visitor_type_other', e.target.value)}
@@ -344,12 +357,12 @@ const VisitorCheckIn = () => {
 
                             {/* Person to Visit */}
                             <div className="mb-4">
-                                <Label>Person to Visit *</Label>
+                                <Label>Person to Visit <RequiredMark /></Label>
                                 <Input
                                     value={data.person_to_visit}
                                     onChange={(e) => setData('person_to_visit', e.target.value)}
                                     disabled={processing}
-                                    placeholder="e.g. Jane Smith (HR Department)"
+                                    placeholder="Enter Person to visit"
                                 />
                                 {(clientErrors.person_to_visit || errors.person_to_visit) && (
                                     <p className="text-sm text-red-600 mt-1">
@@ -360,7 +373,7 @@ const VisitorCheckIn = () => {
 
                             {/* Purpose */}
                             <div className="mb-4">
-                                <Label>Purpose of Visit *</Label>
+                                <Label>Purpose of Visit <RequiredMark /></Label>
                                 <Select
                                     value={data.visit_purpose}
                                     onValueChange={(value) => {
@@ -394,7 +407,7 @@ const VisitorCheckIn = () => {
                             {/* If "Others" selected */}
                             {isOtherPurpose && (
                                 <div className="mb-4">
-                                    <Label>Specify Purpose *</Label>
+                                    <Label>Specify Purpose <RequiredMark /></Label>
                                     <Input
                                         value={data.visit_purpose_other}
                                         onChange={(e) => setData('visit_purpose_other', e.target.value)}
@@ -410,20 +423,90 @@ const VisitorCheckIn = () => {
                             )}
                         </div>
 
+                        {/* Privacy Notice Agreement */}
+                        <div className="space-y-4">
+                            {/* Privacy Notice Text */}
+                            <div className="text-sm text-gray-700 leading-relaxed">
+                                <p className="mb-4">
+                                    I understand that Philippine Global Communications, Inc. (Philcom) including its
+                                    subsidiaries, affiliates, and related companies,
+                                    as well as its
+                                    partners and service providers, if any, and
+                                    hereby authorize them to collect, store and
+                                    process my personal data for the purpose of
+                                    entering the premises of Philcom Headquarters
+                                    submitted through visitor access system.
+                                </p>
+
+                                <ol className="list-decimal list-inside space-y-1 mb-4">
+                                    <li>First Name - Visitor Identification</li>
+                                    <li>Last Name - Visitor Identification</li>
+                                    <li>Company - Visitor Identification</li>
+                                </ol>
+
+                                {/*
+                                <p className="mb-4">
+                                    The foregoing information shall be retained in
+                                    our system for 30 days or as required by
+                                    applicable law and regulations for legitimate
+                                    business purpose, after which the system shall
+                                    securely delete the data.
+                                </p>
+                                */}
+
+                                <p className="mb-4">
+                                    For more information about how we use and
+                                    protect your data, how we comply with the Data
+                                    Privacy Act of 2012 (R.A. 10173), you may visit
+                                    Philcom's Privacy Notice{" "}
+                                    <a
+                                        href="https://www.philcom.com/privacy.php"
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-blue-600 underline hover:text-blue-800"
+                                    >
+                                        https://www.philcom.com/privacy.php
+                                    </a>.
+                                </p>
+                            </div>
+
+                            {/* Agreement Checkbox */}
+                            <div className="flex items-start space-x-3">
+                                <input
+                                    type="checkbox"
+                                    id="agree"
+                                    name="privacy_agreement"
+                                    checked={data.agree || false}
+                                    onChange={(e) => setData("agree", e.target.checked)}
+                                    disabled={processing}
+                                    className="mt-1 w-4 h-4"
+                                />
+                                <label htmlFor="agree" className="text-sm text-gray-700 cursor-pointer">
+                                    Yes, I agree <RequiredMark />
+                                </label>
+                            </div>
+
+
+                        </div>
+
+
                         {/* Submit */}
-                        <Button type="submit" className="w-full" disabled={processing}>
+                        <Button type="submit" className="w-full" disabled={processing || !data.agree}>
                             {processing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                            {processing ? "Submitting..." : "Submit Check-in Details"}
+                            {processing ? "Submitting..." : "Submit"}
                         </Button>
 
-                        <p className="text-xs text-muted-foreground text-center">
-                            By submitting this form, you agree to our visitor policies and consent to the collection of your information for security purposes.
-                        </p>
                     </form>
                 </CardContent>
             </Card>
         </div>
     );
 };
+
+function RequiredMark(){
+    return (
+        <span className="text-red-500">*</span>
+    )
+}
 
 export default VisitorCheckIn;

@@ -9,7 +9,8 @@ return new class extends Migration {
     {
         Schema::create('visitors', function (Blueprint $table) {
             $table->id();
-            $table->string('name')->index();
+            $table->string('first_name')->index();
+            $table->string('last_name')->index();
             $table->string('company')->nullable()->index();
             $table->string('type')->nullable()->index();
             $table->string('person_to_visit')->index();

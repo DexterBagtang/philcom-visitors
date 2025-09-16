@@ -10,7 +10,7 @@ class Visitor extends Model
     use HasFactory;
 
     protected $fillable = [
-        'name', 'company', 'person_to_visit', 'visit_purpose','type'
+        'first_name','last_name', 'company', 'person_to_visit', 'visit_purpose','type'
     ];
 
     public function visits()
@@ -24,5 +24,12 @@ class Visitor extends Model
             ->whereIn('status', ['checked_in', 'ongoing'])
             ->latest();
     }
+
+    public function getNameAttribute()
+    {
+        return "{$this->first_name} {$this->last_name}";
+    }
+
+    protected $appends = ['name'];
 }
 
