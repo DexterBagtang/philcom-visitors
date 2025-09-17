@@ -1,0 +1,40 @@
+<svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <!-- Background -->
+    <rect width="100" height="100" fill="white"/>
+
+    <!-- Large Circle - Main Visitor -->
+    <circle cx="55" cy="45" r="35" fill="none" stroke="none">
+        <defs>
+            <pattern id="stripes-blue" width="10" height="10" patternUnits="userSpaceOnUse">
+                <path d="M-5,0 L5,0 L5,10 L-5,10 Z" fill="#007BFF"/>
+                <path d="M0,-5 L0,5 L10,5 L10,-5 Z" fill="#003366"/>
+            </pattern>
+        </defs>
+        <use href="#stripes-blue" />
+    </circle>
+
+    <!-- Medium Circle - Secondary Visitor -->
+    <circle cx="30" cy="55" r="28" fill="none" stroke="none">
+        <defs>
+            <pattern id="stripes-red" width="10" height="10" patternUnits="userSpaceOnUse">
+                <path d="M-5,0 L5,0 L5,10 L-5,10 Z" fill="#DC3545"/>
+                <path d="M0,-5 L0,5 L10,5 L10,-5 Z" fill="#007BFF"/>
+            </pattern>
+        </defs>
+        <use href="#stripes-red" />
+    </circle>
+
+    <!-- Small Circle - Third Visitor / Check-in Point -->
+    <circle cx="50" cy="75" r="18" fill="none" stroke="none">
+        <defs>
+            <pattern id="stripes-light" width="10" height="10" patternUnits="userSpaceOnUse">
+                <path d="M-5,0 L5,0 L5,10 L-5,10 Z" fill="#6C757D"/>
+                <path d="M0,-5 L0,5 L10,5 L10,-5 Z" fill="#E9ECEF"/>
+            </pattern>
+        </defs>
+        <use href="#stripes-light" />
+    </circle>
+
+    <!-- Optional: Subtle highlight or checkmark to suggest "checked in" -->
+    <path d="M35 60 L45 70 L55 60" stroke="#28A745" stroke-width="2" fill="none" />
+</svg>

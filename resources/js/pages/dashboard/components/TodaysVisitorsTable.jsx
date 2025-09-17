@@ -443,11 +443,11 @@ export default function TodaysVisitorsTable({ visitors, activeQuickFilter, onQui
                             <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => handleViewReport(visit.id)}
+                                onClick={() => router.get(`/visits/${row.original.id}?from=dashboard`,{},{preserveState:true})}
                                 className="border-slate-200 px-4 font-medium shadow-sm hover:bg-slate-50"
                             >
                                 <FileText className="mr-2 h-4 w-4" />
-                                View Report
+                                View Details
                             </Button>
                         ),
                     };
@@ -455,42 +455,42 @@ export default function TodaysVisitorsTable({ visitors, activeQuickFilter, onQui
                     return <div className="flex justify-center" onClick={(e)=>e.stopPropagation()}>{actionMap[status] || <span>-</span>}</div>;
                 },
             },
-            {
-                id: 'more',
-                header: '',
-                cell: ({ row }) => {
-                    const visitor = row.original;
-                    return (
-                        <div className="flex justify-center" onClick={(e)=> e.stopPropagation()}>
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" className="h-8 w-8 p-0 hover:bg-slate-100">
-                                        <span className="sr-only">Open menu</span>
-                                        <MoreVertical className="h-4 w-4" />
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="w-48">
-                                    <DropdownMenuItem onClick={() => alert(`View ${visitor.visitor?.name}`)} className="cursor-pointer">
-                                        <Eye className="mr-2 h-4 w-4" />
-                                        View Details
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => alert(`Edit ${visitor.visitor?.name}`)} className="cursor-pointer">
-                                        <Edit className="mr-2 h-4 w-4" />
-                                        Edit Visitor
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem
-                                        onClick={() => handleDeleteVisitor(visitor.visitor?.id)}
-                                        className="cursor-pointer text-red-600 focus:bg-red-50 focus:text-red-700"
-                                    >
-                                        <Trash2 className="mr-2 h-4 w-4" />
-                                        Delete
-                                    </DropdownMenuItem>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-                        </div>
-                    );
-                },
-            },
+            // {
+            //     id: 'more',
+            //     header: '',
+            //     cell: ({ row }) => {
+            //         const visitor = row.original;
+            //         return (
+            //             <div className="flex justify-center" onClick={(e)=> e.stopPropagation()}>
+            //                 <DropdownMenu>
+            //                     <DropdownMenuTrigger asChild>
+            //                         <Button variant="ghost" className="h-8 w-8 p-0 hover:bg-slate-100">
+            //                             <span className="sr-only">Open menu</span>
+            //                             <MoreVertical className="h-4 w-4" />
+            //                         </Button>
+            //                     </DropdownMenuTrigger>
+            //                     <DropdownMenuContent align="end" className="w-48">
+            //                         <DropdownMenuItem onClick={() => alert(`View ${visitor.visitor?.name}`)} className="cursor-pointer">
+            //                             <Eye className="mr-2 h-4 w-4" />
+            //                             View Details
+            //                         </DropdownMenuItem>
+            //                         <DropdownMenuItem onClick={() => alert(`Edit ${visitor.visitor?.name}`)} className="cursor-pointer">
+            //                             <Edit className="mr-2 h-4 w-4" />
+            //                             Edit Visitor
+            //                         </DropdownMenuItem>
+            //                         <DropdownMenuItem
+            //                             onClick={() => handleDeleteVisitor(visitor.visitor?.id)}
+            //                             className="cursor-pointer text-red-600 focus:bg-red-50 focus:text-red-700"
+            //                         >
+            //                             <Trash2 className="mr-2 h-4 w-4" />
+            //                             Delete
+            //                         </DropdownMenuItem>
+            //                     </DropdownMenuContent>
+            //                 </DropdownMenu>
+            //             </div>
+            //         );
+            //     },
+            // },
             // Virtual column for filtering
             {
                 id: 'quickFilter',

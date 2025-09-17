@@ -492,11 +492,11 @@ export default function VisitorsTableServerSide({ visits = {}, meta = {}, onRefr
                             <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => handleViewReport(visit.id)}
+                                onClick={() => router.get(`/visits/${row.original.id}?from=dashboard`,{},{preserveState:true})}
                                 className="border-slate-200 px-4 font-medium shadow-sm hover:bg-slate-50"
                             >
                                 <FileText className="mr-2 h-4 w-4" />
-                                View Report
+                                View Details
                             </Button>
                         </div>
                     );
@@ -505,7 +505,7 @@ export default function VisitorsTableServerSide({ visits = {}, meta = {}, onRefr
                 return <div className="flex justify-center">-</div>;
             },
         },
-        {
+        /*{
             id: 'more',
             header: '',
             cell: ({ row }) => {
@@ -540,7 +540,7 @@ export default function VisitorsTableServerSide({ visits = {}, meta = {}, onRefr
                     </div>
                 );
             },
-        },
+        },*/
     ];
 
     // Initialize table (client-side rendering only)

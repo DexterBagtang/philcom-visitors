@@ -200,9 +200,6 @@ export default function VisitorShowPage({ visit,from }) {
                 {/* Header with primary action */}
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <Button variant="ghost" size="sm" onClick={()=>handleBack()} className="gap-1">
-                            <ArrowLeft className="h-4 w-4" /> Back
-                        </Button>
                         <div>
                             <h1 className="text-2xl font-bold tracking-tight">Visitor Details</h1>
                             <p className="text-sm text-slate-600">Overview of the visitor and their visit</p>
@@ -210,28 +207,11 @@ export default function VisitorShowPage({ visit,from }) {
                     </div>
 
                     <div className="flex items-center gap-3">
+                        <Button variant="outline" onClick={()=>handleBack()} className="gap-1">
+                            <ArrowLeft className="h-4 w-4" /> Back
+                        </Button>
                         {/* Primary action button based on status */}
                         {getPrimaryAction()}
-
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                                <Button variant="outline" size="icon">
-                                    <MoreVertical className="h-4 w-4" />
-                                </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={handleEditVisitor}>
-                                    <User className="mr-2 h-4 w-4" /> Edit Visitor
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem
-                                    onClick={() => setShowDeleteDialog(true)}
-                                    className="text-red-600 focus:text-red-700 focus:bg-red-50"
-                                >
-                                    {/*<Trash2 className="mr-2 h-4 w-4" /> Delete Visitor*/}
-                                </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
                     </div>
                 </div>
 
