@@ -1,7 +1,11 @@
-import VisitorCheckIn from '@/pages/visitors/components/VisitorCheckIn';
+import { lazy, Suspense } from 'react';
+
+const VisitorCheckIn = lazy(()=> import('@/pages/visitors/components/VisitorCheckIn'));
 
 export default function VisitorCheckinQr() {
     return (
-        <VisitorCheckIn />
+        <Suspense fallback={null}>
+            <VisitorCheckIn />
+        </Suspense>
     );
 }
