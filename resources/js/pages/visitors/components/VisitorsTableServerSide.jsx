@@ -1,15 +1,13 @@
-'use client';
+import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { cn } from '@/lib/utils';
-import CheckoutDialog from '@/pages/visitors/components/CheckoutDialog.jsx';
 import { getAvatarColor } from '@/pages/visitors/helpers/visitor-helpers.js';
 import { router } from '@inertiajs/react';
 import { useEchoPublic } from '@laravel/echo-react';
@@ -23,24 +21,21 @@ import {
     ChevronLeft,
     ChevronRight,
     Clock,
-    Edit,
-    Eye,
     FileText,
     LogOut,
-    MoreVertical,
     RefreshCcw,
     Search,
     Target,
-    Trash2,
     TrendingUp,
     User,
     UserCheck,
     Users,
     X,
 } from 'lucide-react';
-import { useCallback, useEffect, useState } from 'react';
 import { toast } from 'sonner';
-import ValidationDialog from './ValidationDialog';
+const ValidationDialog = lazy(()=> import('./ValidationDialog'));
+const CheckoutDialog = lazy(()=> import('@/pages/visitors/components/CheckoutDialog.jsx'));
+
 
 export default function VisitorsTableServerSide({ visits = {}, meta = {}, onRefresh }) {
     // Server-side state management
@@ -93,8 +88,6 @@ export default function VisitorsTableServerSide({ visits = {}, meta = {}, onRefr
             ...(dateRange.to && !params.hasOwnProperty('dateRange[to]') && { 'dateRange[to]': format(dateRange.to, 'yyyy-MM-dd') }),
             ...params,
         };
-
-        console.log(requestParams);
 
         router.get(route('visitors.table'), requestParams, {
             preserveState: true,
@@ -250,7 +243,6 @@ export default function VisitorsTableServerSide({ visits = {}, meta = {}, onRefr
     };
 
     const handleViewReport = async (visitId) => {
-        console.log('report');
         toast('Event has been created.');
     };
 
@@ -383,7 +375,6 @@ export default function VisitorsTableServerSide({ visits = {}, meta = {}, onRefr
                 const status = row.getValue('status');
                 const visit = row.original;
                 const config = statusConfig[status];
-                console.log(visit);
 
                 return (
                     <div className="space-y-1">
@@ -879,32 +870,36 @@ export default function VisitorsTableServerSide({ visits = {}, meta = {}, onRefr
             </div>
 
             {/* Validation Dialog */}
-            <ValidationDialog
-                isOpen={showValidationDialog}
-                onClose={() => {
-                    setShowValidationDialog(false);
-                    setSelectedVisit(null);
-                    setSelectedVisitor(null);
-                }}
-                visitor={selectedVisitor}
-                visit={selectedVisit}
-                availableBadges={availableBadges}
-                onSuccess={() => {
-                    onRefresh?.();
-                }}
-            />
+            <Suspense fallback={null}>
+                <ValidationDialog
+                    isOpen={showValidationDialog}
+                    onClose={() => {
+                        setShowValidationDialog(false);
+                        setSelectedVisit(null);
+                        setSelectedVisitor(null);
+                    }}
+                    visitor={selectedVisitor}
+                    visit={selectedVisit}
+                    availableBadges={availableBadges}
+                    onSuccess={() => {
+                        onRefresh?.();
+                    }}
+                />
+            </Suspense>
 
-            <CheckoutDialog
-                isOpen={showCheckoutDialog}
-                onClose={() => {
-                    setShowCheckoutDialog(false);
-                    setCheckoutVisit(null);
-                }}
-                visit={checkoutVisit}
-                onSuccess={() => {
-                    onRefresh?.();
-                }}
-            />
+            <Suspense fallback={null}>
+                <CheckoutDialog
+                    isOpen={showCheckoutDialog}
+                    onClose={() => {
+                        setShowCheckoutDialog(false);
+                        setCheckoutVisit(null);
+                    }}
+                    visit={checkoutVisit}
+                    onSuccess={() => {
+                        onRefresh?.();
+                    }}
+                />
+            </Suspense>
         </>
     );
 }

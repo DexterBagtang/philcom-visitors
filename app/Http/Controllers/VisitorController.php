@@ -201,7 +201,8 @@ class VisitorController {
         if ($request->filled('globalFilter')) {
             $search = $request->get('globalFilter');
             $query->whereHas('visitor', function($q) use ($search) {
-                $q->where('visitors.name', 'like', "%{$search}%")
+                $q->where('visitors.first_name', 'like', "%{$search}%")
+                    ->orWhere('visitors.last_name', 'like', "%{$search}%")
                     ->orWhere('company', 'like', "%{$search}%")
                     ->orWhere('visitors.visit_purpose', 'like', "%{$search}%")
                     ->orWhere('person_to_visit', 'like', "%{$search}%");
@@ -273,7 +274,8 @@ class VisitorController {
                         break;
                     case 'name':
                         $query->whereHas('visitor', function($q) use ($value) {
-                            $q->where('name', 'like', "%{$value}%");
+                            $q->where('first_name', 'like', "%{$value}%")
+                            ->orWhere('last_name', 'like', "%{$value}%");
                         });
                         break;
                     case 'company':
@@ -297,7 +299,7 @@ class VisitorController {
                 switch ($columnId) {
                     case 'name':
                         $query->join('visitors', 'visits.visitor_id', '=', 'visitors.id')
-                            ->orderBy('visitors.name', $direction)
+                            ->orderBy('visitors.first_name', $direction)
                             ->select('visits.*');
                         break;
 
