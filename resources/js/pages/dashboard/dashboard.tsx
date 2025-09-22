@@ -1,10 +1,9 @@
+import { lazy, Suspense, useState } from 'react';
 import AppLayout from '@/layouts/app-layout';
-
-const QuickStats = lazy(() => import('@/pages/dashboard/components/QuickStats'));
-const TodaysVisitorsTable = lazy(() => import('@/pages/dashboard/components/TodaysVisitorsTable'));
 import { type BreadcrumbItem } from '@/types';
 import { Head } from '@inertiajs/react';
-import { lazy, Suspense, useState } from 'react';
+const QuickStats = lazy(() => import('@/pages/dashboard/components/QuickStats'));
+const TodaysVisitorsTable = lazy(() => import('@/pages/dashboard/components/TodaysVisitorsTable'));
 
 const breadcrumbs: BreadcrumbItem[] = [
     {

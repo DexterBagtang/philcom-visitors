@@ -1,42 +1,14 @@
-'use client';
-
+import { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import { Badge } from '@/components/ui/badge.js';
 import { Button } from '@/components/ui/button.js';
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger
-} from '@/components/ui/dropdown-menu.js';
 import { Input } from '@/components/ui/input.js';
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue
-} from '@/components/ui/select.js';
-import {
-    Table,
-    TableBody,
-    TableCell,
-    TableHead,
-    TableHeader,
-    TableRow
-} from '@/components/ui/table.js';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select.js';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table.js';
 import { cn } from '@/lib/utils.js';
-import CheckoutDialog from '@/pages/visitors/components/CheckoutDialog.jsx';
-import ValidationDialog from '../../visitors/components/ValidationDialog.jsx';
-import { Link, router } from '@inertiajs/react';
+import { getAvatarColor } from '@/pages/visitors/helpers/visitor-helpers.js';
+import { router } from '@inertiajs/react';
 import { useEchoPublic } from '@laravel/echo-react';
-import {
-    flexRender,
-    getCoreRowModel,
-    getFilteredRowModel,
-    getPaginationRowModel,
-    getSortedRowModel,
-    useReactTable
-} from '@tanstack/react-table';
+import { flexRender, getCoreRowModel, getFilteredRowModel, getPaginationRowModel, getSortedRowModel, useReactTable } from '@tanstack/react-table';
 import {
     Activity,
     ArrowUpDown,
@@ -45,24 +17,22 @@ import {
     ChevronLeft,
     ChevronRight,
     Clock,
-    Edit,
-    Eye,
+    ExternalLink,
     FileText,
     LogOut,
-    MoreVertical,
     RefreshCcw,
     Search,
     Target,
-    Trash2,
     User,
     UserCheck,
     Users,
     X,
-    ExternalLink,
 } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
-import { getAvatarColor } from '@/pages/visitors/helpers/visitor-helpers.js';
+
+const ValidationDialog = lazy(()=> import('../../visitors/components/ValidationDialog.jsx'));
+const  CheckoutDialog = lazy(()=> import('@/pages/visitors/components/CheckoutDialog.jsx'));
+
 
 // Constants
 const STATUS_CONFIG = {
@@ -107,7 +77,6 @@ const QUICK_FILTERS = [
 const PAGE_SIZES = [5, 10, 20, 50];
 
 export default function TodaysVisitorsTable({ visitors, activeQuickFilter, onQuickFilterChange, onClearFilters, onRefresh }) {
-    console.log(visitors);
     // Table state
     const [sorting, setSorting] = useState([]);
     const [globalFilter, setGlobalFilter] = useState('');
@@ -135,7 +104,7 @@ export default function TodaysVisitorsTable({ visitors, activeQuickFilter, onQui
     // Echo listener for real-time updates
     useEchoPublic('visits', 'VisitCreated', (event) => {
         const visitorName = event.visit.visitor?.name ?? 'Unknown';
-        toast.info(`Visitor ${visitorName} checked in`, { position: 'top-center',duration:5000 });
+        toast.info(`Visitor ${visitorName} checked in`, { position: 'top-center', duration: 5000 });
         router.reload();
     });
 
@@ -149,7 +118,13 @@ export default function TodaysVisitorsTable({ visitors, activeQuickFilter, onQui
                 onQuickFilterChange(filterId);
                 const filter = QUICK_FILTERS.find((f) => f.id === filterId);
                 if (filter) {
-                    setColumnFilters((prev) => [...prev.filter((f) => f.id !== 'quickFilter'), { id: 'quickFilter', value: filter.filter() }]);
+                    setColumnFilters((prev) => [
+                        ...prev.filter((f) => f.id !== 'quickFilter'),
+                        {
+                            id: 'quickFilter',
+                            value: filter.filter(),
+                        },
+                    ]);
                 }
             }
             // ✅ Reset page index when filter changes
@@ -229,7 +204,7 @@ export default function TodaysVisitorsTable({ visitors, activeQuickFilter, onQui
     // Effects
     useEffect(() => {
         fetchAvailableBadges();
-    }, [fetchAvailableBadges,showValidationDialog]);
+    }, [fetchAvailableBadges, showValidationDialog]);
 
     useEffect(() => {
         if (activeQuickFilter) {
@@ -443,7 +418,7 @@ export default function TodaysVisitorsTable({ visitors, activeQuickFilter, onQui
                             <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => router.get(`/visits/${row.original.id}?from=dashboard`,{},{preserveState:true})}
+                                onClick={() => router.get(`/visits/${row.original.id}?from=dashboard`, {}, { preserveState: true })}
                                 className="border-slate-200 px-4 font-medium shadow-sm hover:bg-slate-50"
                             >
                                 <FileText className="mr-2 h-4 w-4" />
@@ -452,7 +427,11 @@ export default function TodaysVisitorsTable({ visitors, activeQuickFilter, onQui
                         ),
                     };
 
-                    return <div className="flex justify-center" onClick={(e)=>e.stopPropagation()}>{actionMap[status] || <span>-</span>}</div>;
+                    return (
+                        <div className="flex justify-center" onClick={(e) => e.stopPropagation()}>
+                            {actionMap[status] || <span>-</span>}
+                        </div>
+                    );
                 },
             },
             // {
@@ -721,8 +700,10 @@ export default function TodaysVisitorsTable({ visitors, activeQuickFilter, onQui
                                 table.getRowModel().rows.map((row, index) => (
                                     <TableRow
                                         key={row.id}
-                                        onClick={()=>{router.get(`/visits/${row.original.id}?from=dashboard`,{},{preserveState:true})}}
-                                        className={`border-b border-slate-100/50 transition-all duration-200 hover:bg-gradient-to-r hover:from-slate-50/50 hover:to-blue-50/30 cursor-pointer ${
+                                        onClick={() => {
+                                            router.get(`/visits/${row.original.id}?from=dashboard`, {}, { preserveState: true });
+                                        }}
+                                        className={`cursor-pointer border-b border-slate-100/50 transition-all duration-200 hover:bg-gradient-to-r hover:from-slate-50/50 hover:to-blue-50/30 ${
                                             index % 2 === 0 ? 'bg-white' : 'bg-slate-50/20'
                                         }`}
                                     >
@@ -762,73 +743,80 @@ export default function TodaysVisitorsTable({ visitors, activeQuickFilter, onQui
                 </div>
 
                 {/* Enhanced Bottom Controls */}
-                <div className="flex items-center justify-between rounded-xl border border-slate-200/60 bg-white p-4 shadow-sm backdrop-blur-sm">
-                    <div className="text-sm text-slate-600">
-                        Showing{' '}
-                        <span className="font-semibold text-slate-900">
-                            {table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1}
-                        </span>{' '}
-                        to{' '}
-                        <span className="font-semibold text-slate-900">
-                            {Math.min(
-                                (table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize,
-                                table.getFilteredRowModel().rows.length,
-                            )}
-                        </span>{' '}
-                        of <span className="font-semibold text-slate-900">{table.getFilteredRowModel().rows.length}</span> visitors
+                {visitors.length > 0 && (
+                    <div className="flex items-center justify-between rounded-xl border border-slate-200/60 bg-white p-4 shadow-sm backdrop-blur-sm">
+                        <div className="text-sm text-slate-600">
+                            Showing{' '}
+                            <span className="font-semibold text-slate-900">
+                                {table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1}
+                            </span>{' '}
+                            to{' '}
+                            <span className="font-semibold text-slate-900">
+                                {Math.min(
+                                    (table.getState().pagination.pageIndex + 1) * table.getState().pagination.pageSize,
+                                    table.getFilteredRowModel().rows.length,
+                                )}
+                            </span>{' '}
+                            of <span className="font-semibold text-slate-900">{table.getFilteredRowModel().rows.length}</span> visitors
+                        </div>
+                        <div className="flex items-center space-x-2">
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => table.previousPage()}
+                                disabled={!table.getCanPreviousPage()}
+                                className="border-slate-300 hover:bg-slate-50 disabled:opacity-50"
+                            >
+                                <ChevronLeft className="mr-1 h-4 w-4" />
+                                Previous
+                            </Button>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => table.nextPage()}
+                                disabled={!table.getCanNextPage()}
+                                className="border-slate-300 hover:bg-slate-50 disabled:opacity-50"
+                            >
+                                Next
+                                <ChevronRight className="ml-1 h-4 w-4" />
+                            </Button>
+                        </div>
                     </div>
-                    <div className="flex items-center space-x-2">
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => table.previousPage()}
-                            disabled={!table.getCanPreviousPage()}
-                            className="border-slate-300 hover:bg-slate-50 disabled:opacity-50"
-                        >
-                            <ChevronLeft className="mr-1 h-4 w-4" />
-                            Previous
-                        </Button>
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => table.nextPage()}
-                            disabled={!table.getCanNextPage()}
-                            className="border-slate-300 hover:bg-slate-50 disabled:opacity-50"
-                        >
-                            Next
-                            <ChevronRight className="ml-1 h-4 w-4" />
-                        </Button>
-                    </div>
-                </div>
+                )}
             </div>
 
             {/* Validation Dialog */}
-            <ValidationDialog
-                isOpen={showValidationDialog}
-                onClose={() => {
-                    setShowValidationDialog(false);
-                    setSelectedVisit(null);
-                    setSelectedVisitor(null);
-                }}
-                visitor={selectedVisitor}
-                visit={selectedVisit}
-                availableBadges={availableBadges}
-                onSuccess={() => {
-                    onRefresh?.();
-                }}
-            />
+            <Suspense fallback={null}>
+                <ValidationDialog
+                    isOpen={showValidationDialog}
+                    onClose={() => {
+                        setShowValidationDialog(false);
+                        setSelectedVisit(null);
+                        setSelectedVisitor(null);
+                    }}
+                    visitor={selectedVisitor}
+                    visit={selectedVisit}
+                    availableBadges={availableBadges}
+                    onSuccess={() => {
+                        onRefresh?.();
+                    }}
+                />
+            </Suspense>
 
-            <CheckoutDialog
-                isOpen={showCheckoutDialog}
-                onClose={() => {
-                    setShowCheckoutDialog(false);
-                    setCheckoutVisit(null);
-                }}
-                visit={checkoutVisit}
-                onSuccess={() => {
-                    onRefresh?.();
-                }}
-            />
+
+            <Suspense fallback={null}>
+                <CheckoutDialog
+                    isOpen={showCheckoutDialog}
+                    onClose={() => {
+                        setShowCheckoutDialog(false);
+                        setCheckoutVisit(null);
+                    }}
+                    visit={checkoutVisit}
+                    onSuccess={() => {
+                        onRefresh?.();
+                    }}
+                />
+            </Suspense>
         </>
     );
 }
