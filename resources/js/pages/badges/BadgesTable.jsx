@@ -1,18 +1,21 @@
-'use client';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { ArrowUpDown, BadgeCheckIcon, CheckCircle2, Clock, MapPin, Search, UserCheck } from 'lucide-react';
+import { ArrowUpDown, BadgeCheckIcon, CheckCircle2, Clock, Edit, MapPin, Plus, Search, Trash2, UserCheck } from 'lucide-react';
 import { useState } from 'react';
 import BadgeAssignedDialog from '@/pages/badges/BadgeAssignedDialog.jsx';
+import BadgeFormDialog from '@/pages/badges/BadgeFormDialog.jsx';
+import { router } from '@inertiajs/react';
 
 export default function BadgesTable({ badges }) {
     const [searchInput, setSearchInput] = useState('');
     const [sortOrder, setSortOrder] = useState('asc');
     const [selectedBadge, setSelectedBadge] = useState(null);
-    const [open, setOpen] = useState(false);
+    const [assignedDialogOpen, setAssignedDialogOpen] = useState(false);
+    const [formDialogOpen, setFormDialogOpen] = useState(false);
+    const [editingBadge, setEditingBadge] = useState(null);
 
     const handleSort = () => {
         setSortOrder((prev) => (prev === 'asc' ? 'desc' : 'asc'));
@@ -32,9 +35,32 @@ export default function BadgesTable({ badges }) {
             return sortOrder === 'asc' ? numA.localeCompare(numB) : numB.localeCompare(numA);
         });
 
-    const handleDialog = (badge) => {
+    const handleAssignedDialog = (badge) => {
         setSelectedBadge(badge);
-        setOpen(true);
+        setAssignedDialogOpen(true);
+    };
+
+    const handleAddBadge = () => {
+        setEditingBadge(null);
+        setFormDialogOpen(true);
+    };
+
+    const handleEditBadge = (badge) => {
+        setEditingBadge(badge);
+        setFormDialogOpen(true);
+    };
+
+    const handleDeleteBadge = (badge) => {
+        if (confirm('Are you sure you want to delete this badge?')) {
+            router.delete(`/badges/${badge.id}`, {
+                onSuccess: () => {
+                    console.log('Badge deleted successfully');
+                },
+                onError: () => {
+                    console.log('Error deleting badge');
+                }
+            });
+        }
     };
 
     // Status icon and color mapping
@@ -54,7 +80,7 @@ export default function BadgesTable({ badges }) {
                 return (
                     <div
                         className="flex items-center gap-2 cursor-pointer hover:bg-gray-100 p-1 rounded"
-                        onClick={() => handleDialog(badge)}
+                        onClick={() => handleAssignedDialog(badge)}
                     >
                         <UserCheck className="h-4 w-4 text-red-500" />
                         <Badge variant="outline" className="border-red-300 bg-red-100 text-red-700 text-xs">
@@ -82,15 +108,24 @@ export default function BadgesTable({ badges }) {
                         <BadgeCheckIcon className="h-5 w-5 text-gray-600" />
                         Badge Records
                     </CardTitle>
-                    <div className="relative w-full sm:w-80">
-                        <Search className="absolute top-3 left-3 h-4 w-4 text-gray-400" />
-                        <Input
-                            type="search"
-                            placeholder="Search by number, status, or location..."
-                            value={searchInput}
-                            onChange={(e) => setSearchInput(e.target.value)}
-                            className="rounded-lg pl-10 pr-4 py-2 text-sm border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
-                        />
+                    <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+                        <div className="relative w-full sm:w-80">
+                            <Search className="absolute top-3 left-3 h-4 w-4 text-gray-400" />
+                            <Input
+                                type="search"
+                                placeholder="Search by number, status, or location..."
+                                value={searchInput}
+                                onChange={(e) => setSearchInput(e.target.value)}
+                                className="rounded-lg pl-10 pr-4 py-2 text-sm border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition"
+                            />
+                        </div>
+                        <Button
+                            onClick={handleAddBadge}
+                            className="bg-blue-600 hover:bg-blue-700 text-white flex items-center gap-2"
+                        >
+                            <Plus className="h-4 w-4" />
+                            Add Badge
+                        </Button>
                     </div>
                 </CardHeader>
                 <CardContent className="p-6 pt-0">
@@ -112,6 +147,7 @@ export default function BadgesTable({ badges }) {
                                     <TableHead className="font-semibold text-gray-700 text-sm">Status</TableHead>
                                     <TableHead className="font-semibold text-gray-700 text-sm">Location</TableHead>
                                     <TableHead className="font-semibold text-gray-700 text-sm">Created At</TableHead>
+                                    <TableHead className="font-semibold text-gray-700 text-sm">Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
@@ -136,11 +172,31 @@ export default function BadgesTable({ badges }) {
                                             <TableCell className="text-sm text-gray-600">
                                                 {new Date(badge.created_at).toLocaleDateString()}
                                             </TableCell>
+                                            <TableCell>
+                                                <div className="flex items-center gap-2">
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        onClick={() => handleEditBadge(badge)}
+                                                        className="text-blue-600 hover:text-blue-800 hover:bg-blue-50"
+                                                    >
+                                                        <Edit className="h-4 w-4" />
+                                                    </Button>
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="sm"
+                                                        onClick={() => handleDeleteBadge(badge)}
+                                                        className="text-red-600 hover:text-red-800 hover:bg-red-50"
+                                                    >
+                                                        <Trash2 className="h-4 w-4" />
+                                                    </Button>
+                                                </div>
+                                            </TableCell>
                                         </TableRow>
                                     ))
                                 ) : (
                                     <TableRow>
-                                        <TableCell colSpan={4} className="h-24 text-center text-gray-500 italic">
+                                        <TableCell colSpan={5} className="h-24 text-center text-gray-500 italic">
                                             No badges found 🚫
                                         </TableCell>
                                     </TableRow>
@@ -150,7 +206,20 @@ export default function BadgesTable({ badges }) {
                     </div>
                 </CardContent>
             </Card>
-            <BadgeAssignedDialog badge={selectedBadge} isOpen={open} onOpenChange={setOpen} />
+
+            {/* Assigned Badge Dialog */}
+            <BadgeAssignedDialog
+                badge={selectedBadge}
+                isOpen={assignedDialogOpen}
+                onOpenChange={setAssignedDialogOpen}
+            />
+
+            {/* Add/Edit Badge Dialog */}
+            <BadgeFormDialog
+                badge={editingBadge}
+                isOpen={formDialogOpen}
+                onOpenChange={setFormDialogOpen}
+            />
         </>
     );
 }

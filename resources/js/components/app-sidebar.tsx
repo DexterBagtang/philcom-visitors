@@ -25,7 +25,7 @@ const mainNavItems: NavItem[] = [
     },
     {
         title: 'Badges',
-        href: '/badges/index',
+        href: '/badges',
         icon: IdCard,
     },
 ];

@@ -1,10 +1,9 @@
 <?php
 
+use App\Http\Controllers\BadgeController;
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\HostController;
 use App\Http\Controllers\VisitController;
 use App\Http\Controllers\VisitorController;
-use App\Models\VisitorBadge;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -15,11 +14,8 @@ Route::get('/', function () {
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard',[DashboardController::class,'index'])->name('dashboard');
 
-    Route::get('/badges/index',function(){
-        return inertia('badges/index',[
-            'badges' => VisitorBadge::with('currentAssignment.visit.visitor')->get(),
-        ]);
-    });
+    Route::resource('badges', BadgeController::class);
+
 
 });
 
