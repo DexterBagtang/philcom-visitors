@@ -15,7 +15,7 @@ const VisitorCheckIn = () => {
     const [isOtherType, setIsOtherType] = useState(false);
     const [isOtherPurpose, setIsOtherPurpose] = useState(false);
     const [clientErrors, setClientErrors] = useState({});
-    const [countdown, setCountdown] = useState(20); // 10 seconds countdown
+    const [countdown, setCountdown] = useState(60); // 60 seconds countdown
     const [isCountdownActive, setIsCountdownActive] = useState(false);
 
     const { data, setData, post, processing, errors, reset } = useForm({
@@ -54,7 +54,7 @@ const VisitorCheckIn = () => {
     useEffect(() => {
         if (submitted) {
             setIsCountdownActive(true);
-            setCountdown(20); // Reset to 10 seconds
+            setCountdown(60); // Reset to 60 seconds
         }
     }, [submitted]);
 
@@ -135,7 +135,7 @@ const VisitorCheckIn = () => {
     const handleReturnToForm = () => {
         setSubmitted(false);
         setIsCountdownActive(false);
-        setCountdown(10);
+        setCountdown(60);
         setIsOtherType(false);
         setIsOtherPurpose(false);
         setClientErrors({});
@@ -202,9 +202,18 @@ const VisitorCheckIn = () => {
                             </Button>
                         </div>
 
-                        <p className="text-xs text-muted-foreground mt-4">
-                            The form will automatically reset in {countdown} seconds
-                        </p>
+                        {/* Visual Progress Bar */}
+                        <div className="w-full mt-4">
+                            <div className="w-full bg-gray-200 rounded-full h-2 mb-2">
+                                <div 
+                                    className="bg-blue-600 h-2 rounded-full transition-all duration-1000"
+                                    style={{ width: `${(countdown / 60) * 100}%` }}
+                                />
+                            </div>
+                            <p className="text-xs text-muted-foreground text-center">
+                                The form will automatically reset in {countdown} seconds
+                            </p>
+                        </div>
                     </div>
                 </Card>
             </div>

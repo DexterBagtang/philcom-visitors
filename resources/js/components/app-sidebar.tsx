@@ -6,6 +6,7 @@ import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
 import { Badge, BookOpen, Folder, IdCard, LayoutGrid, PersonStanding, UsersRound } from 'lucide-react';
 import AppLogo from './app-logo';
+import { NotificationSoundToggle } from '@/components/notification-sound-toggle';
 
 const mainNavItems: NavItem[] = [
     {

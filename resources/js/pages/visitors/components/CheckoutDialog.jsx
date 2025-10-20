@@ -55,7 +55,7 @@ export default function CheckoutDialog({ isOpen, onClose, visit, onSuccess }) {
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="sm:max-w-md">
+            <DialogContent className="sm:max-w-md" onInteractOutside={e=>e.preventDefault()}>
                 <DialogHeader>
                     <DialogTitle className="text-lg font-semibold flex items-center gap-2">
                         <IdCard className="h-5 w-5 text-destructive" />

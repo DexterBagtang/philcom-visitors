@@ -210,8 +210,8 @@ export default function ValidationDialog({ isOpen, onClose, visitor, visit, onSu
 
 
     return (
-        <Dialog open={isOpen} onOpenChange={handleClose}>
-            <DialogContent className="sm:max-w-[600px]">
+        <Dialog open={isOpen} onOpenChange={handleClose} >
+            <DialogContent className="sm:max-w-[600px]" onInteractOutside={e=>e.preventDefault()}>
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
                         <IdCard className="h-5 w-5" />

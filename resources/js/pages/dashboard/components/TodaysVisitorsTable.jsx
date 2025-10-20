@@ -29,6 +29,7 @@ import {
     X,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { playNotificationSound } from '@/lib/notification-sound';
 
 const ValidationDialog = lazy(()=> import('../../visitors/components/ValidationDialog.jsx'));
 const  CheckoutDialog = lazy(()=> import('@/pages/visitors/components/CheckoutDialog.jsx'));
@@ -104,7 +105,17 @@ export default function TodaysVisitorsTable({ visitors, activeQuickFilter, onQui
     // Echo listener for real-time updates
     useEchoPublic('visits', 'VisitCreated', (event) => {
         const visitorName = event.visit.visitor?.name ?? 'Unknown';
-        toast.info(`Visitor ${visitorName} checked in`, { position: 'top-center', duration: 5000 });
+        
+        // Play notification sound
+        playNotificationSound();
+        
+        // Show toast notification
+        toast.info(`Visitor ${visitorName} checked in`, { 
+            position: 'top-center', 
+            duration: 5000 
+        });
+        
+        // Reload data
         router.reload();
     });
 
