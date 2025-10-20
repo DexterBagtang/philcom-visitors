@@ -33,4 +33,10 @@ class Visit extends Model
     {
         return $this->hasOne(BadgeAssignment::class)->whereNull('returned_at');
     }
+
+    public function latestBadgeAssignment()
+    {
+        return $this->hasOne(BadgeAssignment::class)->latestOfMany();
+    }
+
 }

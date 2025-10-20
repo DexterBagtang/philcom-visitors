@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\BadgeController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ExportController;
 use App\Http\Controllers\VisitController;
 use App\Http\Controllers\VisitorController;
 use Illuminate\Support\Facades\Route;
@@ -59,6 +60,11 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('visits', VisitController::class);
 
     Route::get('/visitors/index', [VisitorController::class, 'table'])->name('visitors.table');
+
+    // Export routes
+    Route::get('/exports', [ExportController::class, 'index'])->name('exports.index');
+    Route::get('/exports/download', [ExportController::class, 'export'])->name('exports.download');
+    Route::post('/exports/preview', [ExportController::class, 'preview'])->name('exports.preview');
 
 });
 

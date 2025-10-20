@@ -4,7 +4,7 @@ import { NavUser } from '@/components/nav-user';
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
 import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
-import { Badge, BookOpen, Folder, IdCard, LayoutGrid, PersonStanding, UsersRound } from 'lucide-react';
+import { Badge, BookOpen, Download, Folder, IdCard, LayoutGrid, PersonStanding, UsersRound } from 'lucide-react';
 import AppLogo from './app-logo';
 import { NotificationSoundToggle } from '@/components/notification-sound-toggle';
 
@@ -28,6 +28,11 @@ const mainNavItems: NavItem[] = [
         title: 'Badges',
         href: '/badges',
         icon: IdCard,
+    },
+    {
+        title: 'Export Visitors',
+        href: '/exports',
+        icon: Download,
     },
 ];
 
