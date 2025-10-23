@@ -5,9 +5,10 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { router } from '@inertiajs/react';
-import { AlertCircle, Building, Check, Clock, FileText, IdCard, Loader, User } from 'lucide-react';
+import { AlertCircle, Building, Check, Clock, FileText, IdCard, Loader, User, Grid3x3, X } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
@@ -22,6 +23,7 @@ export default function ValidationDialog({ isOpen, onClose, visitor, visit, onSu
     const [errors, setErrors] = useState({});
     const [badgeInput, setBadgeInput] = useState('');
     const [showSuggestions, setShowSuggestions] = useState(false);
+    const [showBadgePanel, setShowBadgePanel] = useState(false);
 
     const idTypes = ['National ID', 'Passport', "Driver's License", 'Company ID', 'Student ID', 'Other'];
 
@@ -57,6 +59,12 @@ export default function ValidationDialog({ isOpen, onClose, visitor, visit, onSu
         setBadgeInput(badge.badge_number);
         handleInputChange('selected_badge_id', badge.id.toString());
         setShowSuggestions(false);
+    };
+
+    const handleBadgeSelectFromPanel = (badge) => {
+        setBadgeInput(badge.badge_number);
+        handleInputChange('selected_badge_id', badge.id.toString());
+        setShowBadgePanel(false);
     };
 
     const selectedBadge = availableBadges.find((badge) => badge.id.toString() === formData.selected_badge_id);
@@ -184,6 +192,7 @@ export default function ValidationDialog({ isOpen, onClose, visitor, visit, onSu
         setErrors({});
         setBadgeInput('');
         setShowSuggestions(false);
+        setShowBadgePanel(false);
     };
 
     const handleClose = () => {
@@ -289,43 +298,138 @@ export default function ValidationDialog({ isOpen, onClose, visitor, visit, onSu
                     <div className="space-y-2">
                         <Label htmlFor="badge-input">Assign Badge *</Label>
 
-                        <div className="relative">
-                            <Input
-                                id="badge-input"
-                                placeholder="Type badge number (e.g., 001, B-123)"
-                                value={badgeInput}
-                                onChange={(e) => handleBadgeInputChange(e.target.value)}
-                                onFocus={() => setShowSuggestions(badgeInput.length > 0)}
-                                onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                                className={cn(errors.selected_badge_id && 'border-red-500')}
-                            />
+                        <div className="relative flex gap-2">
+                            <div className="relative flex-1">
+                                <Input
+                                    id="badge-input"
+                                    placeholder="Type badge number (e.g., 001, B-123)"
+                                    value={badgeInput}
+                                    onChange={(e) => handleBadgeInputChange(e.target.value)}
+                                    onFocus={() => setShowSuggestions(badgeInput.length > 0)}
+                                    onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                                    className={cn(errors.selected_badge_id && 'border-red-500')}
+                                    autoComplete="off"
+                                />
 
-                            {/* Suggestions Dropdown */}
-                            {showSuggestions && filteredBadges.length > 0 && (
-                                <div className="absolute z-50 mt-1 max-h-40 w-full overflow-y-auto rounded-md border bg-white shadow-lg">
-                                    {filteredBadges.slice(0, 8).map((badge) => (
-                                        <div
-                                            key={badge.id}
-                                            onClick={() => handleSuggestionSelect(badge)}
-                                            className="flex cursor-pointer items-center justify-between border-b p-2 last:border-b-0 hover:bg-gray-50"
-                                        >
-                                            <div className="flex items-center space-x-2">
-                                                {selectedBadge?.id === badge.id && <Check className="h-3 w-3 text-green-600" />}
-                                                <span className="text-sm font-medium">Badge #{badge.badge_number}</span>
+                                {/* Suggestions Dropdown */}
+                                {showSuggestions && filteredBadges.length > 0 && (
+                                    <div className="absolute z-50 mt-1 max-h-40 w-full overflow-y-auto rounded-md border bg-white shadow-lg">
+                                        {filteredBadges.slice(0, 8).map((badge) => (
+                                            <div
+                                                key={badge.id}
+                                                onClick={() => handleSuggestionSelect(badge)}
+                                                className="flex cursor-pointer items-center justify-between border-b p-2 last:border-b-0 hover:bg-gray-50"
+                                            >
+                                                <div className="flex items-center space-x-2">
+                                                    {selectedBadge?.id === badge.id && <Check className="h-3 w-3 text-green-600" />}
+                                                    <span className="text-sm font-medium">Badge #{badge.badge_number}</span>
+                                                </div>
+                                                <Badge variant="outline" className="text-xs">
+                                                    {badge.location || 'Available'}
+                                                </Badge>
                                             </div>
-                                            <Badge variant="outline" className="text-xs">
-                                                {badge.location || 'Available'}
-                                            </Badge>
-                                        </div>
-                                    ))}
-                                    {filteredBadges.length > 8 && (
-                                        <div className="border-t p-2 text-center text-xs text-gray-500">
-                                            {filteredBadges.length - 8} more badges available...
+                                        ))}
+                                        {filteredBadges.length > 8 && (
+                                            <div className="border-t p-2 text-center text-xs text-gray-500">
+                                                {filteredBadges.length - 8} more badges available...
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* Browse Badges Button with Tooltip */}
+                            <TooltipProvider>
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="icon"
+                                            disabled={availableBadges.length === 0}
+                                            onClick={() => setShowBadgePanel(!showBadgePanel)}
+                                            className={cn(
+                                                'shrink-0',
+                                                showBadgePanel && 'bg-blue-50 border-blue-400'
+                                            )}
+                                        >
+                                            <Grid3x3 className="h-4 w-4" />
+                                        </Button>
+                                    </TooltipTrigger>
+                                    <TooltipContent>
+                                        <p>Browse the available badges</p>
+                                    </TooltipContent>
+                                </Tooltip>
+                            </TooltipProvider>
+                        </div>
+
+                        {/* Badge Browser Panel */}
+                        {showBadgePanel && (
+                            <div className="relative mt-2 rounded-lg border-2 border-blue-400 bg-white shadow-lg">
+                                <div className="sticky top-0 flex items-center justify-between border-b bg-gradient-to-r from-blue-50 to-blue-100 p-3">
+                                    <div>
+                                        <h4 className="font-semibold text-sm flex items-center gap-2 text-blue-900">
+                                            <IdCard className="h-4 w-4" />
+                                            Available Badges ({availableBadges.length})
+                                        </h4>
+                                        <p className="text-xs text-blue-700 mt-0.5">Click a badge to assign</p>
+                                    </div>
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-6 w-6 hover:bg-blue-200"
+                                        onClick={() => setShowBadgePanel(false)}
+                                    >
+                                        <X className="h-4 w-4" />
+                                    </Button>
+                                </div>
+                                <div className="max-h-[280px] overflow-y-auto p-3">
+                                    <div className="grid grid-cols-3 gap-2">
+                                        {availableBadges.map((badge) => (
+                                            <button
+                                                key={badge.id}
+                                                type="button"
+                                                onClick={() => handleBadgeSelectFromPanel(badge)}
+                                                className={cn(
+                                                    'relative flex flex-col items-center justify-center rounded-lg border-2 p-3 transition-all hover:border-blue-400 hover:bg-blue-50 hover:shadow-md',
+                                                    selectedBadge?.id === badge.id
+                                                        ? 'border-green-500 bg-green-50 shadow-md'
+                                                        : 'border-gray-200 bg-white'
+                                                )}
+                                            >
+                                                {selectedBadge?.id === badge.id && (
+                                                    <div className="absolute -right-1 -top-1 rounded-full bg-green-500 p-0.5 shadow-sm">
+                                                        <Check className="h-3 w-3 text-white" />
+                                                    </div>
+                                                )}
+                                                <IdCard className={cn(
+                                                    'h-7 w-7 mb-1.5',
+                                                    selectedBadge?.id === badge.id ? 'text-green-600' : 'text-gray-400'
+                                                )} />
+                                                <span className={cn(
+                                                    'text-sm font-bold',
+                                                    selectedBadge?.id === badge.id ? 'text-green-700' : 'text-gray-700'
+                                                )}>
+                                                    {badge.badge_number}
+                                                </span>
+                                                {badge.location && (
+                                                    <Badge variant="outline" className="mt-1.5 text-[10px] px-1.5 py-0">
+                                                        {badge.location}
+                                                    </Badge>
+                                                )}
+                                            </button>
+                                        ))}
+                                    </div>
+                                    {availableBadges.length === 0 && (
+                                        <div className="py-8 text-center text-sm text-gray-500">
+                                            <IdCard className="mx-auto h-8 w-8 text-gray-300 mb-2" />
+                                            No badges available
                                         </div>
                                     )}
                                 </div>
-                            )}
-                        </div>
+                            </div>
+                        )}
 
                         {/* Selected Badge Display */}
                         {selectedBadge && (
@@ -355,7 +459,7 @@ export default function ValidationDialog({ isOpen, onClose, visitor, visit, onSu
                         {badgeInput && filteredBadges.length === 0 && availableBadges.length > 0 && (
                             <p className="flex items-center gap-1 text-sm text-gray-500">
                                 <AlertCircle className="h-3 w-3" />
-                                No badges found matching "{badgeInput}". Available badges: {availableBadges.map((b) => b.badge_number).join(', ')}
+                                No badges found matching "{badgeInput}". Click the grid icon to browse all badges.
                             </p>
                         )}
                     </div>
