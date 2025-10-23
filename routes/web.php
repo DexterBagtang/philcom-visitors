@@ -60,6 +60,7 @@ Route::middleware(['auth'])->group(function () {
     Route::resource('visits', VisitController::class);
 
     Route::get('/visitors/index', [VisitorController::class, 'table'])->name('visitors.table');
+    Route::get('/visitors/insights', [VisitorController::class, 'getInsights'])->name('visitors.insights');
 
     // Export routes
     Route::get('/exports', [ExportController::class, 'index'])->name('exports.index');

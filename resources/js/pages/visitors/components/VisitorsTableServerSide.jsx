@@ -1,5 +1,6 @@
 import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
 import { Badge } from '@/components/ui/badge';
+import VisitorInsights from './VisitorInsights';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Input } from '@/components/ui/input';
@@ -584,6 +585,8 @@ export default function VisitorsTableServerSide({ visits = {}, meta = {}, onRefr
     return (
         <>
             <div className="space-y-6">
+                {/* Visitor Insights Section */}
+                <VisitorInsights />
                 {/* Enhanced Top Controls with Modern Design */}
                 <div className="rounded-xl border border-slate-200/60 bg-white shadow-sm backdrop-blur-sm">
                     {/* Main content area with better spacing */}

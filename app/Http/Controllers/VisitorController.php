@@ -190,6 +190,146 @@ class VisitorController {
 
     }
 
+    public function getInsights(Request $request)
+    {
+        // Get date range from request or default to last 30 days
+        $dateFrom = $request->get('dateFrom', now()->subDays(30));
+        $dateTo = $request->get('dateTo', now());
+
+        // Top Companies/Vendors
+        $topCompanies = Visit::with('visitor')
+            ->whereBetween('check_in_time', [$dateFrom, $dateTo])
+            ->whereHas('visitor', function($q) {
+                $q->whereNotNull('company')
+                  ->where('company', '!=', '');
+            })
+            ->get()
+            ->groupBy(function($visit) {
+                return $visit->visitor->company;
+            })
+            ->map(function($visits) {
+                return [
+                    'company' => $visits->first()->visitor->company,
+                    'count' => $visits->count()
+                ];
+            })
+            ->sortByDesc('count')
+            ->take(5)
+            ->values();
+
+        // Top Visitors (most frequent)
+        $topVisitors = Visit::with('visitor')
+            ->whereBetween('check_in_time', [$dateFrom, $dateTo])
+            ->get()
+            ->map(function ($visit) {
+                return [
+                    'first_name' => $visit->visitor->first_name,
+                    'last_name'  => $visit->visitor->last_name,
+                    'company'    => $visit->visitor->company,
+                    'name'       => $visit->visitor->name,
+                    'visitor_id' => $visit->visitor_id,
+                ];
+            })
+            ->groupBy(function ($item) {
+                // Combine identifying fields to make a unique group key
+                return $item['first_name'] . ' ' . $item['last_name'] . '|' . $item['company'];
+            })
+            ->map(function ($group) {
+                $first = $group->first();
+                return [
+                    'name'    => $first['name'],
+                    'company' => $first['company'],
+                    'count'   => $group->count(),
+                ];
+            })
+            ->sortByDesc('count')
+            ->take(5)
+            ->values();
+
+
+        // Top Persons to Visit (hosts)
+        $topHosts = Visit::with('visitor')
+            ->whereBetween('check_in_time', [$dateFrom, $dateTo])
+            ->whereHas('visitor', function($q) {
+                $q->whereNotNull('person_to_visit')
+                  ->where('person_to_visit', '!=', '');
+            })
+            ->get()
+            ->groupBy(function($visit) {
+                return $visit->visitor->person_to_visit;
+            })
+            ->map(function($visits) {
+                return [
+                    'host' => $visits->first()->visitor->person_to_visit,
+                    'count' => $visits->count()
+                ];
+            })
+            ->sortByDesc('count')
+            ->take(5)
+            ->values();
+
+        // Top Visit Purposes
+        $topPurposes = Visit::with('visitor')
+            ->whereBetween('check_in_time', [$dateFrom, $dateTo])
+            ->whereHas('visitor', function($q) {
+                $q->whereNotNull('visit_purpose')
+                  ->where('visit_purpose', '!=', '');
+            })
+            ->get()
+            ->groupBy(function($visit) {
+                return $visit->visitor->visit_purpose;
+            })
+            ->map(function($visits) {
+                return [
+                    'purpose' => $visits->first()->visitor->visit_purpose,
+                    'count' => $visits->count()
+                ];
+            })
+            ->sortByDesc('count')
+            ->take(5)
+            ->values();
+
+        // Top Visitor Types
+        $topTypes = Visit::with('visitor')
+            ->whereBetween('check_in_time', [$dateFrom, $dateTo])
+            ->whereHas('visitor', function($q) {
+                $q->whereNotNull('type')
+                  ->where('type', '!=', '');
+            })
+            ->get()
+            ->groupBy(function($visit) {
+                return $visit->visitor->type;
+            })
+            ->map(function($visits) {
+                return [
+                    'type' => $visits->first()->visitor->type,
+                    'count' => $visits->count()
+                ];
+            })
+            ->sortByDesc('count')
+            ->take(5)
+            ->values();
+
+        // Total visits in period
+        $totalVisits = Visit::whereBetween('check_in_time', [$dateFrom, $dateTo])->count();
+
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'topCompanies' => $topCompanies,
+                'topVisitors' => $topVisitors,
+                'topHosts' => $topHosts,
+                'topPurposes' => $topPurposes,
+                'topTypes' => $topTypes,
+                'totalVisits' => $totalVisits,
+                'dateRange' => [
+                    'from' => $dateFrom,
+                    'to' => $dateTo
+                ]
+            ]
+        ]);
+    }
+
     public function table(Request $request)
     {
         $query = Visit::with([

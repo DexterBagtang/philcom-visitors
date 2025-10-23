@@ -32,7 +32,7 @@ class BadgeController extends Controller
     {
         $validated = $request->validate([
             'badge_number' => 'required|string|max:255|unique:visitor_badges,badge_number,' . $badge->id,
-            'status' => 'required|string|in:available,assigned,maintenance',
+            'status' => 'required|string|in:available,lost,damaged',
             'location' => 'required|string|max:255',
         ]);
 
