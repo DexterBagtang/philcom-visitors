@@ -27,9 +27,11 @@ import {
     UserCheck,
     Users,
     X,
+    XCircle,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { playNotificationSound } from '@/lib/notification-sound';
+import DurationTracker from '@/components/shared/DurationTracker.jsx';
 
 const ValidationDialog = lazy(()=> import('../../visitors/components/ValidationDialog.jsx'));
 const  CheckoutDialog = lazy(()=> import('@/pages/visitors/components/CheckoutDialog.jsx'));
@@ -52,6 +54,11 @@ const STATUS_CONFIG = {
         dot: 'bg-slate-500',
         label: 'Checked Out',
     },
+    denied: {
+        color: 'bg-red-50 text-red-700 border-red-200',
+        dot: 'bg-red-500',
+        label: 'Denied',
+    },
 };
 
 const QUICK_FILTERS = [
@@ -72,6 +79,12 @@ const QUICK_FILTERS = [
         label: 'Checked Out',
         icon: UserCheck,
         filter: () => (row) => row.getValue('status') === 'checked_out',
+    },
+    {
+        id: 'denied',
+        label: 'Denied',
+        icon: XCircle,
+        filter: () => (row) => row.getValue('status') === 'denied',
     },
 ];
 
@@ -358,6 +371,13 @@ export default function TodaysVisitorsTable({ visitors, activeQuickFilter, onQui
                                     </Badge>
                                 </div>
                             )}
+                            {status === 'denied' && visit.denial_reason && (
+                                <div className="ml-4 mt-1">
+                                    <p className="text-xs text-red-600 italic">
+                                        {visit.denial_reason}
+                                    </p>
+                                </div>
+                            )}
                         </div>
                     );
                 },
@@ -401,6 +421,48 @@ export default function TodaysVisitorsTable({ visitors, activeQuickFilter, onQui
                 },
             },
             {
+                id: 'duration',
+                accessorKey: 'check_in_time',
+                header: () => (
+                    <div className="flex items-center font-semibold text-slate-700">
+                        <Clock className="mr-2 h-4 w-4" />
+                        Duration
+                    </div>
+                ),
+                cell: ({ row }) => {
+                    const visit = row.original;
+                    const status = visit.status;
+                    
+                    // Only show duration for ongoing and checked_out visits
+                    if (status === 'checked_in') {
+                        return (
+                            <div className="text-xs text-slate-500 italic">
+                                Pending validation
+                            </div>
+                        );
+                    }
+
+                    // For denied visits, show N/A or dash
+                    if (status === 'denied') {
+                        return (
+                            <div className="text-xs text-slate-500 italic">
+                                N/A
+                            </div>
+                        );
+                    }
+
+                    return (
+                        <DurationTracker
+                            startTime={visit.check_in_time}
+                            endTime={visit.check_out_time}
+                            status={status}
+                            variant="badge"
+                            showIcon={status === 'ongoing'}
+                        />
+                    );
+                },
+            },
+            {
                 id: 'action',
                 header: () => <div className="text-center font-semibold text-slate-700">Actions</div>,
                 cell: ({ row }) => {
@@ -431,6 +493,17 @@ export default function TodaysVisitorsTable({ visitors, activeQuickFilter, onQui
                                 size="sm"
                                 onClick={() => router.get(`/visits/${row.original.id}?from=dashboard`, {}, { preserveState: true })}
                                 className="border-slate-200 px-4 font-medium shadow-sm hover:bg-slate-50"
+                            >
+                                <FileText className="mr-2 h-4 w-4" />
+                                View Details
+                            </Button>
+                        ),
+                        denied: (
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => router.get(`/visits/${row.original.id}?from=dashboard`, {}, { preserveState: true })}
+                                className="border-red-200 px-4 font-medium shadow-sm hover:bg-red-50 text-red-600"
                             >
                                 <FileText className="mr-2 h-4 w-4" />
                                 View Details

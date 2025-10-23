@@ -19,6 +19,7 @@ export default function ValidationDialog({ isOpen, onClose, visitor, visit, onSu
         selected_badge_id: '',
     });
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [isDenying, setIsDenying] = useState(false);
     const [errors, setErrors] = useState({});
     const [badgeInput, setBadgeInput] = useState('');
     const [showSuggestions, setShowSuggestions] = useState(false);
@@ -159,7 +160,7 @@ export default function ValidationDialog({ isOpen, onClose, visitor, visit, onSu
 
         if (!validateDenyForm()) return;
 
-        setIsSubmitting(true);
+        setIsDenying(true);
 
         router.post(route('visits.deny',visit.id),{...formData},{
             preserveState:true,
@@ -181,7 +182,7 @@ export default function ValidationDialog({ isOpen, onClose, visitor, visit, onSu
                 });
             },
             onFinish: () => {
-                setIsSubmitting(false);
+                setIsDenying(false);
                 handleClose();
             },
         })
@@ -417,14 +418,28 @@ export default function ValidationDialog({ isOpen, onClose, visitor, visit, onSu
                     </div>
 
                     <DialogFooter>
-                        <Button type="button" disabled={isSubmitting} variant="destructive" onClick={handleDeny}>
-                            {isSubmitting ? <div className="animate-spin"><Loader/></div> : 'Deny'}
+                        <Button type="button" disabled={isDenying || isSubmitting} variant="destructive" onClick={handleDeny}>
+                            {isDenying ? (
+                                <span className="flex items-center gap-2">
+                                    <Loader className="h-4 w-4 animate-spin" />
+                                    Denying...
+                                </span>
+                            ) : (
+                                'Deny'
+                            )}
                         </Button>
-                        <Button type="button" variant="outline" onClick={handleClose}>
+                        <Button type="button" variant="outline" onClick={handleClose} disabled={isSubmitting || isDenying}>
                             Cancel
                         </Button>
-                        <Button type="submit" disabled={isSubmitting || availableBadges.length === 0} className="bg-green-600 hover:bg-green-700">
-                            {isSubmitting ? 'Validating...' : 'Validate & Assign Badge'}
+                        <Button type="submit" disabled={isSubmitting || isDenying || availableBadges.length === 0} className="bg-green-600 hover:bg-green-700">
+                            {isSubmitting ? (
+                                <span className="flex items-center gap-2">
+                                    <Loader className="h-4 w-4 animate-spin" />
+                                    Validating...
+                                </span>
+                            ) : (
+                                'Validate & Assign Badge'
+                            )}
                         </Button>
                     </DialogFooter>
                 </form>

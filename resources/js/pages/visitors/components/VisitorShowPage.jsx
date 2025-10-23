@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -40,8 +40,8 @@ import {
     AlertTriangle,
     Timer,
 } from 'lucide-react';
-import CheckoutDialog from '@/pages/visitors/components/CheckoutDialog.jsx';
-import ValidationDialog from '@/pages/visitors/components/ValidationDialog.jsx';
+const CheckoutDialog = lazy(() => import('@/pages/visitors/components/CheckoutDialog.jsx'));
+const ValidationDialog = lazy(() => import('@/pages/visitors/components/ValidationDialog.jsx'));
 import { router } from '@inertiajs/react';
 import { format, formatDistanceToNow, intervalToDuration, formatDuration, parseISO, differenceInMinutes, differenceInHours } from 'date-fns';
 
@@ -67,6 +67,13 @@ const statusConfig = {
         label: 'Checked Out',
         icon: XCircle,
         description: 'Visit has been completed',
+    },
+    denied: {
+        color: 'bg-red-50 text-red-700 border-red-200',
+        dot: 'bg-red-500',
+        label: 'Access Denied',
+        icon: XCircle,
+        description: 'Visitor was denied entry',
     },
 };
 
@@ -223,8 +230,10 @@ export default function VisitorShowPage({ visit, from }) {
         }
     };
 
-    // Calculate visit duration
-    const visitDuration = calculateVisitDuration(visit.check_in_time, visit.check_out_time);
+    // Calculate visit duration - but not for denied visits
+    const visitDuration = visit.status === 'denied' 
+        ? { duration: 'N/A', isOngoing: false, totalMinutes: 0 }
+        : calculateVisitDuration(visit.check_in_time, visit.check_out_time);
 
     return (
         <div className="min-h-screen bg-slate-50">
@@ -281,14 +290,16 @@ export default function VisitorShowPage({ visit, from }) {
                                                 {currentStatus.label}
                                             </Badge>
                                         </div>
-                                        {/* Duration Display */}
-                                        <div className="flex items-center gap-2 text-sm">
-                                            <Timer className="h-4 w-4 text-slate-400" />
-                                            <span className="font-semibold">{visitDuration.duration}</span>
-                                            {visitDuration.isOngoing && (
-                                                <span className="text-emerald-600 font-medium text-xs">ongoing</span>
-                                            )}
-                                        </div>
+                                        {/* Duration Display - Don't show for denied visits */}
+                                        {visit.status !== 'denied' && (
+                                            <div className="flex items-center gap-2 text-sm">
+                                                <Timer className="h-4 w-4 text-slate-400" />
+                                                <span className="font-semibold">{visitDuration.duration}</span>
+                                                {visitDuration.isOngoing && (
+                                                    <span className="text-emerald-600 font-medium text-xs">ongoing</span>
+                                                )}
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
                             </CardHeader>
@@ -316,7 +327,17 @@ export default function VisitorShowPage({ visit, from }) {
                                     {/* Badge & Validation Info */}
                                     <div className="space-y-3">
                                         <h3 className="text-sm font-semibold text-slate-900 mb-2">Current Status</h3>
-                                        {visit.current_badge_assignment?.badge ? (
+                                        {visit.status === 'denied' ? (
+                                            <div className="flex gap-2 items-start">
+                                                <XCircle className="h-4 w-4 text-red-400 mt-0.5 flex-shrink-0" />
+                                                <div className="min-w-0">
+                                                    <p className="text-sm font-medium text-red-600">Access Denied</p>
+                                                    <p className="text-xs text-slate-500">
+                                                        Denied by {visit.validated_by || 'Staff'}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        ) : visit.current_badge_assignment?.badge ? (
                                             <div className="flex gap-2 items-start">
                                                 <CreditCard className="h-4 w-4 text-purple-400 mt-0.5 flex-shrink-0" />
                                                 <div className="min-w-0">
@@ -377,6 +398,32 @@ export default function VisitorShowPage({ visit, from }) {
                                     </div>
                                 </div>
 
+                                {/* Denial */}
+                                {visit.status === 'denied' && (
+                                    <div className="flex gap-3 items-start">
+                                        <div className="h-8 w-8 flex items-center justify-center rounded-full bg-red-100">
+                                            <XCircle className="h-4 w-4 text-red-600" />
+                                        </div>
+                                        <div>
+                                            <p className="text-sm font-medium text-red-600">Access Denied by {visit.validated_by || 'Staff'}</p>
+                                            <p className="text-xs text-slate-600">
+                                                {formatDateTime(visit.validated_at).full}
+                                            </p>
+                                            <p className="text-xs text-slate-500">
+                                                {formatDateTime(visit.validated_at).relative}
+                                            </p>
+                                            {visit.validation_notes && (
+                                                <div className="mt-2 rounded-md bg-red-50 p-2 border border-red-100">
+                                                    <p className="text-xs text-red-700">
+                                                        <span className="font-semibold">Reason: </span>
+                                                        {visit.validation_notes}
+                                                    </p>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
+
                                 {/* Validation */}
                                 {(visit.status === 'ongoing' || visit.status === 'checked_out') && (
                                     <div className="flex gap-3 items-start">
@@ -423,50 +470,71 @@ export default function VisitorShowPage({ visit, from }) {
 
                     {/* Right Column - Simplified */}
                     <div className="space-y-6">
-                        {/* Key Times Card */}
-                        <Card>
-                            <CardHeader className="pb-3">
-                                <CardTitle className="text-sm flex items-center gap-2">
-                                    <Clock className="h-4 w-4" /> Key Times
-                                </CardTitle>
-                            </CardHeader>
-                            <CardContent className="space-y-3 text-sm">
-                                <div className="flex justify-between items-center">
-                                    <span className="text-slate-600">Check-in</span>
-                                    <span className="font-medium">{formatDateTime(visit.check_in_time).time}</span>
-                                </div>
-
-                                {visit.validated_at && (
+                        {/* Key Times Card - Don't show for denied visits */}
+                        {visit.status !== 'denied' && (
+                            <Card>
+                                <CardHeader className="pb-3">
+                                    <CardTitle className="text-sm flex items-center gap-2">
+                                        <Clock className="h-4 w-4" /> Key Times
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent className="space-y-3 text-sm">
                                     <div className="flex justify-between items-center">
-                                        <span className="text-slate-600">Validated</span>
-                                        <span className="font-medium">{formatDateTime(visit.validated_at).time}</span>
+                                        <span className="text-slate-600">Check-in</span>
+                                        <span className="font-medium">{formatDateTime(visit.check_in_time).time}</span>
                                     </div>
-                                )}
 
-                                {visit.check_out_time ? (
-                                    <div className="flex justify-between items-center">
-                                        <span className="text-slate-600">Check-out</span>
-                                        <span className="font-medium">{formatDateTime(visit.check_out_time).time}</span>
+                                    {visit.validated_at && (
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-slate-600">Validated</span>
+                                            <span className="font-medium">{formatDateTime(visit.validated_at).time}</span>
+                                        </div>
+                                    )}
+
+                                    {visit.check_out_time ? (
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-slate-600">Check-out</span>
+                                            <span className="font-medium">{formatDateTime(visit.check_out_time).time}</span>
+                                        </div>
+                                    ) : (visit.status === 'ongoing' || visit.status === 'checked_in') && (
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-slate-600">Current time</span>
+                                            <span className="font-medium text-emerald-600">
+                                                {format(currentTime, 'h:mm a')}
+                                            </span>
+                                        </div>
+                                    )}
+
+                                    <Separator />
+                                    <div className="flex justify-between items-center font-medium">
+                                        <span className="text-slate-900">Total Duration</span>
+                                        <span className="text-lg">{visitDuration.duration}</span>
                                     </div>
-                                ) : (visit.status === 'ongoing' || visit.status === 'checked_in') && (
-                                    <div className="flex justify-between items-center">
-                                        <span className="text-slate-600">Current time</span>
-                                        <span className="font-medium text-emerald-600">
-                                            {format(currentTime, 'h:mm a')}
-                                        </span>
-                                    </div>
-                                )}
+                                </CardContent>
+                            </Card>
+                        )}
 
-                                <Separator />
-                                <div className="flex justify-between items-center font-medium">
-                                    <span className="text-slate-900">Total Duration</span>
-                                    <span className="text-lg">{visitDuration.duration}</span>
-                                </div>
-                            </CardContent>
-                        </Card>
+                        {/* Denial Reason Card - Show for denied visits */}
+                        {visit.status === 'denied' && visit.validation_notes && (
+                            <Card className="border-red-200 bg-red-50/50">
+                                <CardHeader className="pb-3">
+                                    <CardTitle className="text-sm flex items-center gap-2 text-red-700">
+                                        <XCircle className="h-4 w-4" /> Denial Reason
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <p className="text-sm text-red-700">{visit.validation_notes}</p>
+                                    {visit.validated_by && (
+                                        <p className="text-xs text-red-600 mt-2">
+                                            Denied by: {visit.validated_by}
+                                        </p>
+                                    )}
+                                </CardContent>
+                            </Card>
+                        )}
 
-                        {/* Additional Details - Only if relevant */}
-                        {visit.validation_notes && (
+                        {/* Additional Details - Only if relevant (don't show for denied since it's shown above) */}
+                        {visit.validation_notes && visit.status !== 'denied' && (
                             <Card>
                                 <CardHeader className="pb-3">
                                     <CardTitle className="text-sm">Validation Notes</CardTitle>
@@ -481,27 +549,31 @@ export default function VisitorShowPage({ visit, from }) {
             </div>
 
             {/* Dialogs */}
-            <CheckoutDialog
-                isOpen={showCheckoutDialog}
-                onClose={() => setShowCheckoutDialog(false)}
-                visit={visit}
-                onSuccess={() => {
-                    toast.success('Visitor checked out successfully');
-                    router.refresh();
-                }}
-            />
+            <Suspense fallback={null}>
+                <CheckoutDialog
+                    isOpen={showCheckoutDialog}
+                    onClose={() => setShowCheckoutDialog(false)}
+                    visit={visit}
+                    onSuccess={() => {
+                        toast.success('Visitor checked out successfully');
+                        router.refresh();
+                    }}
+                />
+            </Suspense>
 
-            <ValidationDialog
-                isOpen={showValidationDialog}
-                onClose={() => setShowValidationDialog(false)}
-                visit={visit}
-                visitor={visitor}
-                onSuccess={() => {
-                    toast.success('Visitor validated successfully');
-                    router.refresh();
-                }}
-                availableBadges={availableBadges}
-            />
+            <Suspense fallback={null}>
+                <ValidationDialog
+                    isOpen={showValidationDialog}
+                    onClose={() => setShowValidationDialog(false)}
+                    visit={visit}
+                    visitor={visitor}
+                    onSuccess={() => {
+                        toast.success('Visitor validated successfully');
+                        router.refresh();
+                    }}
+                    availableBadges={availableBadges}
+                />
+            </Suspense>
 
             {/* Delete Confirmation Dialog */}
             <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>

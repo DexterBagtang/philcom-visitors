@@ -221,19 +221,27 @@ class VisitController extends Controller
                 'validation_notes' => 'required|string|max:1000',
             ]);
 
+            // Check if visit can be denied
+            if (!in_array($visit->status, ['checked_in', 'for_validation'])) {
+                return back()->withErrors([
+                    'general' => 'This visit cannot be denied. Current status: ' . $visit->status
+                ]);
+            }
+
             $visit->update([
-                'status' => 'checked_out',
+                'status' => 'denied',
                 'validated_by' => Auth::user()->name,
                 'validated_at' => now(),
                 'id_type_checked' => $request->input('id_type_checked'),
                 'id_number_checked' => $request->input('id_number_checked'),
-                'validation_notes' => "Visitor Denied! : Notes " .$validated['validation_notes'],
+                'validation_notes' => $validated['validation_notes'],
             ]);
 
-            return redirect()->back()->with('success', 'Visitor denied!.');
+            return redirect()->back()->with('success', 'Visitor denied successfully.');
         } catch (\Exception $e) {
-                return back()->withErrors($e->getMessage());
+            return back()->withErrors([
+                'general' => 'An error occurred during denial: ' . $e->getMessage()
+            ]);
         }
-
     }
 }

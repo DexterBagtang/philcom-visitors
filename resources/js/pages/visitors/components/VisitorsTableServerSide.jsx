@@ -31,6 +31,7 @@ import {
     UserCheck,
     Users,
     X,
+    XCircle,
 } from 'lucide-react';
 import { toast } from 'sonner';
 const ValidationDialog = lazy(()=> import('./ValidationDialog'));
@@ -140,6 +141,11 @@ export default function VisitorsTableServerSide({ visits = {}, meta = {}, onRefr
             id: 'checked_out',
             label: 'Checked Out',
             icon: UserCheck,
+        },
+        {
+            id: 'denied',
+            label: 'Denied',
+            icon: XCircle,
         },
     ];
 
@@ -273,6 +279,11 @@ export default function VisitorsTableServerSide({ visits = {}, meta = {}, onRefr
             dot: 'bg-slate-500',
             label: 'Checked Out',
         },
+        denied: {
+            color: 'bg-red-50 text-red-700 border-red-200',
+            dot: 'bg-red-500',
+            label: 'Denied',
+        },
     };
 
     // Table columns
@@ -391,14 +402,20 @@ export default function VisitorsTableServerSide({ visits = {}, meta = {}, onRefr
                                 </Badge>
                             </div>
                         )}
-                        {isBefore(visit.check_in_time, startOfToday()) && status !== 'checked_out' && (
+                        {status === 'denied' && visit.denial_reason && (
+                            <div className="ml-4 mt-1">
+                                <p className="text-xs text-red-600 italic">
+                                    {visit.denial_reason}
+                                </p>
+                            </div>
+                        )}
+                        {isBefore(visit.check_in_time, startOfToday()) && status !== 'checked_out' && status !== 'denied' && (
                             <div className="ml-4 flex items-center">
                                 <Badge variant="outline" className="border-red-200 bg-red-50 px-1 text-xs font-light text-red-700">
                                     Overdue
                                 </Badge>
                             </div>
                         )}
-
                     </div>
                 );
             },
@@ -485,6 +502,22 @@ export default function VisitorsTableServerSide({ visits = {}, meta = {}, onRefr
                                 size="sm"
                                 onClick={() => router.get(`/visits/${row.original.id}?from=dashboard`,{},{preserveState:true})}
                                 className="border-slate-200 px-4 font-medium shadow-sm hover:bg-slate-50"
+                            >
+                                <FileText className="mr-2 h-4 w-4" />
+                                View Details
+                            </Button>
+                        </div>
+                    );
+                }
+
+                if (status === 'denied') {
+                    return (
+                        <div className="flex justify-center" onClick={(e)=> e.stopPropagation()}>
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => router.get(`/visits/${row.original.id}?from=dashboard`,{},{preserveState:true})}
+                                className="border-red-200 px-4 font-medium shadow-sm hover:bg-red-50 text-red-600"
                             >
                                 <FileText className="mr-2 h-4 w-4" />
                                 View Details
