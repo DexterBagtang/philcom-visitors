@@ -22,7 +22,7 @@ class DatabaseSeeder extends Seeder
         User::factory()->create([
             'name' => 'Admin User',
             'username' => 'admin',
-            'email' => 'dexterbagtang@gmail.com',
+            'email' => 'Dexter.Bagtang@philcom.com',
             'role' => 'admin',
             'password' => bcrypt('asdfasdf'),
         ]);
@@ -38,7 +38,7 @@ class DatabaseSeeder extends Seeder
 //        User::factory()->count(5)->create();
 //
 //        // Visitor badges
-        VisitorBadge::factory()->count(20)->create();
+//        VisitorBadge::factory()->count(20)->create();
 //        Visit::factory()->count(1)->create();
 //
 //        // Visitors and visits
