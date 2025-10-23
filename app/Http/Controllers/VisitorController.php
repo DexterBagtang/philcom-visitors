@@ -236,6 +236,10 @@ class VisitorController {
                 case 'checked_out':
                     $query->where('status', 'checked_out');
                     break;
+
+                case 'denied':
+                    $query->where('status', 'denied');
+                    break;
             }
         }
 
