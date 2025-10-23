@@ -31,7 +31,18 @@ export default function QuickStats({ visitors = [], activeFilter, onFilterChange
             title: "Ongoing Visit",
             description: "Visitors inside",
             icon: UserCheck,
-            color: "text-green-600 bg-green-100",
+            color: "text-emerald-600 bg-emerald-100",
+            iconBg: "bg-emerald-100",
+            iconText: "text-emerald-600",
+            gradientFrom: "from-emerald-50",
+            gradientTo: "to-emerald-100/50",
+            ringColor: "ring-emerald-200",
+            hoverBg: "hover:bg-emerald-50/50",
+            activeBg: "bg-emerald-50/80",
+            activeBorder: "border-emerald-400",
+            activeRing: "ring-2 ring-emerald-300",
+            defaultBorder: "border-emerald-200",
+            glowShadow: "shadow-emerald-100",
         },
         {
             id: "checked_out",
@@ -40,6 +51,17 @@ export default function QuickStats({ visitors = [], activeFilter, onFilterChange
             description: "Completed visits",
             icon: Clock,
             color: "text-blue-600 bg-blue-100",
+            iconBg: "bg-blue-100",
+            iconText: "text-blue-600",
+            gradientFrom: "from-blue-50",
+            gradientTo: "to-blue-100/50",
+            ringColor: "ring-blue-200",
+            hoverBg: "hover:bg-blue-50/50",
+            activeBg: "bg-blue-50/80",
+            activeBorder: "border-blue-400",
+            activeRing: "ring-2 ring-blue-300",
+            defaultBorder: "border-blue-200",
+            glowShadow: "shadow-blue-100",
         },
         {
             id: "checked_in",
@@ -48,6 +70,18 @@ export default function QuickStats({ visitors = [], activeFilter, onFilterChange
             description: "Awaiting ID check",
             icon: AlertTriangle,
             color: "text-amber-600 bg-amber-100",
+            iconBg: "bg-amber-100",
+            iconText: "text-amber-600",
+            gradientFrom: "from-amber-50",
+            gradientTo: "to-amber-100/50",
+            ringColor: "ring-amber-200",
+            hoverBg: "hover:bg-amber-50/50",
+            activeBg: "bg-amber-50/80",
+            activeBorder: "border-amber-400",
+            activeRing: "ring-2 ring-amber-300",
+            defaultBorder: "border-amber-200",
+            glowShadow: "shadow-amber-100",
+            pulse: pendingValidation > 0,
         },
         {
             id: "all",
@@ -56,6 +90,12 @@ export default function QuickStats({ visitors = [], activeFilter, onFilterChange
             description: "All time",
             icon: Users,
             color: "text-slate-600 bg-slate-100",
+            iconBg: "bg-slate-100",
+            iconText: "text-slate-600",
+            gradientFrom: "from-slate-50",
+            gradientTo: "to-slate-100/50",
+            defaultBorder: "border-slate-200",
+            glowShadow: "shadow-slate-100",
             noFilter: true,
         },
     ];
@@ -106,58 +146,122 @@ export default function QuickStats({ visitors = [], activeFilter, onFilterChange
 
             {/* Stats Cards */}
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
-                {filterOptions.map((filter) => (
-                    <Card
-                        key={filter.id}
-                        className={cn(
-                            "group relative rounded-xl border shadow-sm transition-all hover:shadow-md",
-                            !filter.noFilter && activeFilter === filter.id
-                                ? "border-blue-500 bg-blue-50/60"
-                                : "hover:border-blue-300 hover:bg-blue-50/30",
-                            filter.noFilter ? "" : "cursor-pointer"
-                        )}
-                        onClick={() => {
-                            if (!filter.noFilter) {
-                                onFilterChange(filter.id === activeFilter ? null : filter.id);
-                            }
-                        }}
-                    >
-                        <CardHeader className="flex flex-row items-center justify-between pb-2">
-                            <CardTitle className="text-sm font-medium">
-                                {filter.title}
-                            </CardTitle>
-                            <div
-                                className={cn(
-                                    "flex h-8 w-8 items-center justify-center rounded-full",
-                                    filter.color
-                                )}
-                            >
-                                <filter.icon className="h-4 w-4" />
+                {filterOptions.map((filter) => {
+                    const isActive = !filter.noFilter && activeFilter === filter.id;
+                    
+                    return (
+                        <Card
+                            key={filter.id}
+                            className={cn(
+                                "group relative rounded-xl border-2 transition-all duration-300 overflow-hidden",
+                                !filter.noFilter && "cursor-pointer",
+                                // Default state - colored borders and subtle glow
+                                !isActive && filter.defaultBorder,
+                                !isActive && "shadow-md",
+                                !isActive && filter.glowShadow,
+                                // Active state
+                                isActive && [
+                                    filter.activeBorder,
+                                    filter.activeRing,
+                                    "shadow-lg",
+                                    "scale-[1.02]"
+                                ],
+                                // Hover state
+                                !isActive && !filter.noFilter && [
+                                    "hover:border-opacity-80",
+                                    filter.hoverBg,
+                                    "hover:shadow-lg",
+                                    "hover:scale-[1.01]",
+                                    "hover:-translate-y-0.5"
+                                ]
+                            )}
+                            onClick={() => {
+                                if (!filter.noFilter) {
+                                    onFilterChange(filter.id === activeFilter ? null : filter.id);
+                                }
+                            }}
+                        >
+                            {/* Gradient Background - always visible but subtle */}
+                            <div className={cn(
+                                "absolute inset-0 bg-gradient-to-br transition-opacity duration-300",
+                                filter.gradientFrom,
+                                filter.gradientTo,
+                                isActive ? "opacity-100" : "opacity-40 group-hover:opacity-70"
+                            )} />
+                            
+                            {/* Pulse animation for pending validation */}
+                            {filter.pulse && filter.count > 0 && (
+                                <div className="absolute top-2 right-2 z-10">
+                                    <span className="relative flex h-3 w-3">
+                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                                        <span className="relative inline-flex rounded-full h-3 w-3 bg-amber-500 shadow-lg"></span>
+                                    </span>
+                                </div>
+                            )}
+
+                            {/* Shine effect on hover */}
+                            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
                             </div>
-                        </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold">{filter.count}</div>
-                            <p className="text-xs text-muted-foreground">
-                                {filter.description}
-                            </p>
-                        </CardContent>
-                    </Card>
-                ))}
+
+                            <CardHeader className="relative flex flex-row items-center justify-between pb-2">
+                                <CardTitle className={cn(
+                                    "text-sm font-semibold transition-colors",
+                                    isActive && "font-bold"
+                                )}>
+                                    {filter.title}
+                                </CardTitle>
+                                <div
+                                    className={cn(
+                                        "flex h-11 w-11 items-center justify-center rounded-full transition-all duration-300 shadow-md",
+                                        filter.iconBg,
+                                        filter.iconText,
+                                        isActive && "scale-110 shadow-lg ring-2 ring-white"
+                                    )}
+                                >
+                                    <filter.icon className={cn(
+                                        "h-5 w-5 transition-all",
+                                        isActive && "h-6 w-6"
+                                    )} />
+                                </div>
+                            </CardHeader>
+                            <CardContent className="relative">
+                                <div className={cn(
+                                    "text-3xl font-bold transition-all duration-300",
+                                    isActive && "text-4xl"
+                                )}>
+                                    {filter.count}
+                                </div>
+                                <p className="text-xs text-muted-foreground mt-1 font-medium">
+                                    {filter.description}
+                                </p>
+                            </CardContent>
+                        </Card>
+                    );
+                })}
 
                 {/* Visitor Types Breakdown Card */}
-                <Card className="group relative rounded-xl border shadow-sm transition-all hover:shadow-md">
-                    <CardHeader className="flex flex-row items-center justify-between pb-2">
-                        <CardTitle className="text-sm font-medium">
+                <Card className="group relative rounded-xl border-2 border-purple-200 shadow-md shadow-purple-100 transition-all duration-300 hover:shadow-lg hover:border-purple-300 hover:scale-[1.01] hover:-translate-y-0.5 overflow-hidden">
+                    {/* Gradient Background - always visible */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-purple-50 to-purple-100/50 opacity-40 group-hover:opacity-70 transition-opacity duration-300" />
+                    
+                    {/* Shine effect on hover */}
+                    <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000" />
+                    </div>
+
+                    <CardHeader className="relative flex flex-row items-center justify-between pb-2">
+                        <CardTitle className="text-sm font-semibold">
                             Visitor Types
                         </CardTitle>
-                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-purple-100 text-purple-600">
-                            <UserCog className="h-4 w-4" />
+                        <div className="flex h-11 w-11 items-center justify-center rounded-full bg-purple-100 text-purple-600 transition-all duration-300 shadow-md group-hover:scale-110 group-hover:shadow-lg group-hover:ring-2 group-hover:ring-white">
+                            <UserCog className="h-5 w-5" />
                         </div>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="relative">
                         {topVisitorTypes.length > 0 ? (
                             <>
-                                <div className="text-2xl font-bold text-slate-900">
+                                <div className="text-3xl font-bold text-slate-900">
                                     {Object.keys(visitorTypeStats).length}
                                 </div>
                                 <div className="flex items-center gap-1 mt-1 flex-wrap">
@@ -204,8 +308,8 @@ export default function QuickStats({ visitors = [], activeFilter, onFilterChange
                             </>
                         ) : (
                             <>
-                                <div className="text-2xl font-bold text-slate-900">0</div>
-                                <p className="text-xs text-muted-foreground">No visitor types</p>
+                                <div className="text-3xl font-bold text-slate-900">0</div>
+                                <p className="text-xs text-muted-foreground font-medium">No visitor types</p>
                             </>
                         )}
                     </CardContent>

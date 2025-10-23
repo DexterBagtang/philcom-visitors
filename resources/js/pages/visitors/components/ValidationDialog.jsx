@@ -1,10 +1,10 @@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { router } from '@inertiajs/react';
 import { AlertCircle, Building, Check, Clock, FileText, IdCard, Loader, User } from 'lucide-react';
@@ -14,7 +14,6 @@ import { toast } from 'sonner';
 export default function ValidationDialog({ isOpen, onClose, visitor, visit, onSuccess, availableBadges = [] }) {
     const [formData, setFormData] = useState({
         id_type_checked: '',
-        id_number_checked: '',
         validation_notes: '',
         selected_badge_id: '',
     });
@@ -31,7 +30,6 @@ export default function ValidationDialog({ isOpen, onClose, visitor, visit, onSu
             ...prev,
             [field]: value,
         }));
-        // Clear error when user starts typing
         if (errors[field]) {
             setErrors((prev) => ({
                 ...prev,
@@ -40,14 +38,12 @@ export default function ValidationDialog({ isOpen, onClose, visitor, visit, onSu
         }
     };
 
-    // Filter badges based on input
     const filteredBadges = availableBadges.filter((badge) => badge.badge_number.toLowerCase().includes(badgeInput.toLowerCase()));
 
     const handleBadgeInputChange = (value) => {
         setBadgeInput(value);
         setShowSuggestions(value.length > 0);
 
-        // Clear selection if input doesn't match any badge
         const exactMatch = availableBadges.find((badge) => badge.badge_number.toLowerCase() === value.toLowerCase());
 
         if (exactMatch) {
@@ -70,10 +66,6 @@ export default function ValidationDialog({ isOpen, onClose, visitor, visit, onSu
 
         if (!formData.id_type_checked) {
             newErrors.id_type_checked = 'ID type is required';
-        }
-
-        if (!formData.id_number_checked.trim()) {
-            newErrors.id_number_checked = 'ID number is required';
         }
 
         if (!formData.selected_badge_id) {
@@ -99,19 +91,16 @@ export default function ValidationDialog({ isOpen, onClose, visitor, visit, onSu
                     validated_by: window.auth?.user?.name || 'Staff',
                 },
                 {
-                    preserveState:true,
-                    preserveScroll:true,
+                    preserveState: true,
+                    preserveScroll: true,
                     onSuccess: () => {
-                        // Show success toast with visitor and badge details
                         toast.success('Visitor validated successfully', {
                             description: `${visitor?.name} has been validated and assigned badge #${selectedBadge?.badge_number}. Visit is now active.`,
                             duration: 4000,
                         });
-                        // onSuccess?.();
                         onClose();
                         setFormData({
                             id_type_checked: '',
-                            id_number_checked: '',
                             validation_notes: '',
                             selected_badge_id: '',
                         });
@@ -119,8 +108,6 @@ export default function ValidationDialog({ isOpen, onClose, visitor, visit, onSu
                     },
                     onError: (errors) => {
                         setErrors(errors);
-
-                        // Show error toast
                         toast.error('Validation failed', {
                             description: errors.message || 'There was an error validating the visitor. Please check the form and try again.',
                             duration: 4000,
@@ -136,8 +123,6 @@ export default function ValidationDialog({ isOpen, onClose, visitor, visit, onSu
         } catch (error) {
             console.error('Validation error:', error);
             setIsSubmitting(false);
-
-            // Show error toast for unexpected errors
             toast.error('Validation failed', {
                 description: 'An unexpected error occurred. Please try again.',
                 duration: 4000,
@@ -151,9 +136,8 @@ export default function ValidationDialog({ isOpen, onClose, visitor, visit, onSu
             newErrors.validation_notes = 'Notes is required when visitor is Denied';
         }
         setErrors(newErrors);
-
         return Object.keys(newErrors).length === 0;
-    }
+    };
 
     const handleDeny = (e) => {
         e.preventDefault();
@@ -162,39 +146,38 @@ export default function ValidationDialog({ isOpen, onClose, visitor, visit, onSu
 
         setIsDenying(true);
 
-        router.post(route('visits.deny',visit.id),{...formData},{
-            preserveState:true,
-            preserveScroll:true,
-            onSuccess: () => {
-                // Show success toast with visitor and badge details
-                toast.warning('Visitor Denied', {
-                    description: `${visitor?.name} has been denied`,
-                    duration: 4000,
-                });
+        router.post(
+            route('visits.deny', visit.id),
+            { ...formData },
+            {
+                preserveState: true,
+                preserveScroll: true,
+                onSuccess: () => {
+                    toast.warning('Visitor Denied', {
+                        description: `${visitor?.name} has been denied`,
+                        duration: 4000,
+                    });
+                },
+                onError: (errors) => {
+                    setErrors(errors);
+                    toast.error('Validation failed', {
+                        description: errors.message || 'There was an error validating the visitor. Please check the form and try again.',
+                        duration: 4000,
+                    });
+                },
+                onFinish: () => {
+                    setIsDenying(false);
+                    handleClose();
+                },
             },
-            onError: (errors) => {
-                setErrors(errors);
-
-                // Show error toast
-                toast.error('Validation failed', {
-                    description: errors.message || 'There was an error validating the visitor. Please check the form and try again.',
-                    duration: 4000,
-                });
-            },
-            onFinish: () => {
-                setIsDenying(false);
-                handleClose();
-            },
-        })
+        );
     };
 
     if (!visitor || !visit) return null;
 
-    // Reset function to clear all states
     const resetDialog = () => {
         setFormData({
             id_type_checked: '',
-            id_number_checked: '',
             validation_notes: '',
             selected_badge_id: '',
         });
@@ -203,16 +186,14 @@ export default function ValidationDialog({ isOpen, onClose, visitor, visit, onSu
         setShowSuggestions(false);
     };
 
-    // Handle dialog close with reset
     const handleClose = () => {
         resetDialog();
         onClose();
     };
 
-
     return (
-        <Dialog open={isOpen} onOpenChange={handleClose} >
-            <DialogContent className="sm:max-w-[600px]" onInteractOutside={e=>e.preventDefault()}>
+        <Dialog open={isOpen} onOpenChange={handleClose}>
+            <DialogContent className="sm:max-w-[600px]" onInteractOutside={(e) => e.preventDefault()}>
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
                         <IdCard className="h-5 w-5" />
@@ -281,45 +262,26 @@ export default function ValidationDialog({ isOpen, onClose, visitor, visit, onSu
                     <div className="space-y-4">
                         <h3 className="text-sm font-semibold text-gray-700">ID Verification</h3>
 
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="space-y-2">
-                                <Label htmlFor="id_type">ID Type *</Label>
-                                <Select value={formData.id_type_checked} onValueChange={(value) => handleInputChange('id_type_checked', value)}>
-                                    <SelectTrigger className={errors.id_type_checked ? 'border-red-500' : ''}>
-                                        <SelectValue placeholder="Select ID type" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        {idTypes.map((type) => (
-                                            <SelectItem key={type} value={type}>
-                                                {type}
-                                            </SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
-                                {errors.id_type_checked && (
-                                    <p className="flex items-center gap-1 text-sm text-red-500">
-                                        <AlertCircle className="h-3 w-3" />
-                                        {errors.id_type_checked}
-                                    </p>
-                                )}
-                            </div>
-
-                            <div className="space-y-2">
-                                <Label htmlFor="id_number">ID Number *</Label>
-                                <Input
-                                    id="id_number"
-                                    placeholder="Enter ID number"
-                                    value={formData.id_number_checked}
-                                    onChange={(e) => handleInputChange('id_number_checked', e.target.value)}
-                                    className={errors.id_number_checked ? 'border-red-500' : ''}
-                                />
-                                {errors.id_number_checked && (
-                                    <p className="flex items-center gap-1 text-sm text-red-500">
-                                        <AlertCircle className="h-3 w-3" />
-                                        {errors.id_number_checked}
-                                    </p>
-                                )}
-                            </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="id_type">ID Type *</Label>
+                            <Select value={formData.id_type_checked} onValueChange={(value) => handleInputChange('id_type_checked', value)}>
+                                <SelectTrigger className={errors.id_type_checked ? 'border-red-500' : ''}>
+                                    <SelectValue placeholder="Select ID type" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {idTypes.map((type) => (
+                                        <SelectItem key={type} value={type}>
+                                            {type}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            {errors.id_type_checked && (
+                                <p className="flex items-center gap-1 text-sm text-red-500">
+                                    <AlertCircle className="h-3 w-3" />
+                                    {errors.id_type_checked}
+                                </p>
+                            )}
                         </div>
                     </div>
 

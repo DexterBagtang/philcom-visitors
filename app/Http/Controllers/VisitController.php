@@ -22,7 +22,6 @@ class VisitController extends Controller
             // Validate the request data
             $validated = $request->validate([
                 'id_type_checked' => 'required|string|max:50',
-                'id_number_checked' => 'required|string|max:100',
                 'validation_notes' => 'nullable|string|max:1000',
                 'selected_badge_id' => 'required|exists:visitor_badges,id',
                 'validated_by' => 'required|string|max:100',
@@ -52,7 +51,6 @@ class VisitController extends Controller
                     'validated_by' => Auth::user()->name,
                     'validated_at' => now(),
                     'id_type_checked' => $validated['id_type_checked'],
-                    'id_number_checked' => $validated['id_number_checked'],
                     'validation_notes' => $validated['validation_notes'],
                 ]);
 
@@ -72,7 +70,6 @@ class VisitController extends Controller
 
                 DB::commit();
 
-//                return back()->with('success', 'Visitor validated successfully and badge assigned.');
                 return redirect()->back()->with('success', 'Visitor validated successfully and badge assigned.');
 
             } catch (\Exception $e) {
@@ -206,11 +203,12 @@ class VisitController extends Controller
         }
     }
 
-    public function show(Request $request, Visit $visit){
+    public function show(Request $request, Visit $visit)
+    {
         $visit->load(['visitor', 'currentBadgeAssignment.badge']);
-        return inertia('visitors/show',[
+        return inertia('visitors/show', [
             'visit' => $visit,
-            'from' => $request->get('from','dashboard'),
+            'from' => $request->get('from', 'dashboard'),
         ]);
     }
 
@@ -233,7 +231,6 @@ class VisitController extends Controller
                 'validated_by' => Auth::user()->name,
                 'validated_at' => now(),
                 'id_type_checked' => $request->input('id_type_checked'),
-                'id_number_checked' => $request->input('id_number_checked'),
                 'validation_notes' => $validated['validation_notes'],
             ]);
 

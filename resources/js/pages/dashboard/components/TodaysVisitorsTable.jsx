@@ -248,15 +248,17 @@ export default function TodaysVisitorsTable({ visitors, activeQuickFilter, onQui
             {
                 accessorFn: (row) => row.visitor?.name,
                 id: 'name',
+                size: 200,
+                minSize: 180,
                 header: ({ column }) => (
                     <Button
                         variant="ghost"
                         onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
                         className="h-auto p-0 font-semibold text-slate-700 hover:bg-transparent hover:text-slate-900"
                     >
-                        <User className="mr-2 h-4 w-4" />
-                        Visitor Name
-                        <ArrowUpDown className="ml-2 h-4 w-4 opacity-50" />
+                        <User className="mr-1 h-4 w-4" />
+                        Name
+                        <ArrowUpDown className="ml-1 h-4 w-4 opacity-50" />
                     </Button>
                 ),
                 cell: ({ row }) => {
@@ -270,17 +272,17 @@ export default function TodaysVisitorsTable({ visitors, activeQuickFilter, onQui
                         .substring(0, 2);
 
                     return (
-                        <div className="flex items-center space-x-3">
+                        <div className="flex items-center space-x-2 w-full max-w-[180px]">
                             <div className="flex-shrink-0">
                                 <div
-                                    className={`flex h-8 w-8 items-center justify-center rounded-full ${avatarColor} text-xs font-medium text-white`}
+                                    className={`flex h-7 w-7 items-center justify-center rounded-full ${avatarColor} text-xs font-medium text-white`}
                                 >
                                     {initials}
                                 </div>
                             </div>
                             <div className="min-w-0 flex-1">
-                                <p className="truncate text-sm font-medium text-slate-900">{name}</p>
-                                <p className="text-xs text-slate-500 capitalize">{visitorType}</p>
+                                <p className="truncate text-sm font-medium text-slate-900" title={name}>{name}</p>
+                                <p className="text-xs text-slate-500 capitalize truncate">{visitorType}</p>
                             </div>
                         </div>
                     );
@@ -295,44 +297,51 @@ export default function TodaysVisitorsTable({ visitors, activeQuickFilter, onQui
             {
                 accessorFn: (row) => row.visitor?.company,
                 id: 'company',
+                size: 140,
                 header: () => (
                     <div className="flex items-center font-semibold text-slate-700">
-                        <Building2 className="mr-2 h-4 w-4" />
+                        <Building2 className="mr-1 h-4 w-4" />
                         Company
                     </div>
                 ),
                 cell: ({ row }) => (
-                    <div className="max-w-[180px]">
-                        <p className="truncate text-sm font-medium text-slate-900">{row.getValue('company') || 'N/A'}</p>
+                    <div className="max-w-[130px]">
+                        <p className="truncate text-sm font-medium text-slate-900" title={row.getValue('company')}>
+                            {row.getValue('company') || 'N/A'}
+                        </p>
                     </div>
                 ),
             },
             {
                 accessorFn: (row) => row.visitor?.person_to_visit,
                 id: 'person_to_visit',
+                size: 120,
                 header: () => (
                     <div className="flex items-center font-semibold text-slate-700">
-                        <UserCheck className="mr-2 h-4 w-4" />
+                        <UserCheck className="mr-1 h-4 w-4" />
                         Host
                     </div>
                 ),
                 cell: ({ row }) => (
-                    <div className="max-w-[150px]">
-                        <p className="truncate text-sm font-medium text-slate-900">{row.getValue('person_to_visit')}</p>
+                    <div className="max-w-[110px]">
+                        <p className="truncate text-sm font-medium text-slate-900" title={row.getValue('person_to_visit')}>
+                            {row.getValue('person_to_visit')}
+                        </p>
                     </div>
                 ),
             },
             {
                 accessorFn: (row) => row.visitor?.visit_purpose,
                 id: 'visit_purpose',
+                size: 150,
                 header: () => (
                     <div className="flex items-center font-semibold text-slate-700">
-                        <Target className="mr-2 h-4 w-4" />
+                        <Target className="mr-1 h-4 w-4" />
                         Purpose
                     </div>
                 ),
                 cell: ({ row }) => (
-                    <div className="max-w-[200px]">
+                    <div className="max-w-[140px]">
                         <p className="truncate text-sm text-slate-700" title={row.getValue('visit_purpose')}>
                             {row.getValue('visit_purpose')}
                         </p>
@@ -342,9 +351,10 @@ export default function TodaysVisitorsTable({ visitors, activeQuickFilter, onQui
             {
                 accessorKey: 'status',
                 id: 'status',
+                size: 140,
                 header: () => (
                     <div className="flex items-center font-semibold text-slate-700">
-                        <Activity className="mr-2 h-4 w-4" />
+                        <Activity className="mr-1 h-4 w-4" />
                         Status
                     </div>
                 ),
@@ -354,15 +364,15 @@ export default function TodaysVisitorsTable({ visitors, activeQuickFilter, onQui
                     const config = STATUS_CONFIG[status];
 
                     return (
-                        <div className="space-y-1">
+                        <div className="space-y-1 max-w-[130px]">
                             <div className="flex items-center">
-                                <div className={`h-2 w-2 rounded-full ${config.dot} mr-2`} />
-                                <Badge className={`${config.color} border px-2 py-0.5 text-xs font-medium`} variant="outline">
+                                <div className={`h-2 w-2 rounded-full ${config.dot} mr-1.5`} />
+                                <Badge className={`${config.color} border px-2 py-0.5 text-xs font-medium truncate`} variant="outline">
                                     {config.label}
                                 </Badge>
                             </div>
                             {status === 'ongoing' && visit.current_badge_assignment?.badge && (
-                                <div className="ml-4 flex items-center">
+                                <div className="ml-3.5 flex items-center">
                                     <Badge
                                         variant="outline"
                                         className="border-indigo-200 bg-indigo-50 px-2 py-0.5 text-xs font-medium text-indigo-700"
@@ -372,8 +382,8 @@ export default function TodaysVisitorsTable({ visitors, activeQuickFilter, onQui
                                 </div>
                             )}
                             {status === 'denied' && visit.denial_reason && (
-                                <div className="ml-4 mt-1">
-                                    <p className="text-xs text-red-600 italic">
+                                <div className="ml-3.5 mt-1">
+                                    <p className="text-xs text-red-600 italic truncate" title={visit.denial_reason}>
                                         {visit.denial_reason}
                                     </p>
                                 </div>
@@ -391,22 +401,23 @@ export default function TodaysVisitorsTable({ visitors, activeQuickFilter, onQui
             {
                 accessorKey: 'check_in_time',
                 id: 'check_in_time',
+                size: 120,
                 header: ({ column }) => (
                     <Button
                         variant="ghost"
                         onClick={() => column.toggleSorting(column.getIsSorted() === 'asc')}
                         className="h-auto p-0 font-semibold text-slate-700 hover:bg-transparent hover:text-slate-900"
                     >
-                        <Clock className="mr-2 h-4 w-4" />
-                        Check-in Time
-                        <ArrowUpDown className="ml-2 h-4 w-4 opacity-50" />
+                        <Clock className="mr-1 h-4 w-4" />
+                        Check-in
+                        <ArrowUpDown className="ml-1 h-4 w-4 opacity-50" />
                     </Button>
                 ),
                 cell: ({ row }) => {
                     const date = new Date(row.getValue('check_in_time'));
                     return (
-                        <div className="mltext-sm">
-                            <p className="text-sm font-medium text-slate-900">
+                        <div className="text-sm max-w-[110px]">
+                            <p className="text-sm font-medium text-slate-900 truncate">
                                 {date.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })}
                             </p>
                             <p className="text-xs text-slate-500">
@@ -423,9 +434,10 @@ export default function TodaysVisitorsTable({ visitors, activeQuickFilter, onQui
             {
                 id: 'duration',
                 accessorKey: 'check_in_time',
+                size: 100,
                 header: () => (
                     <div className="flex items-center font-semibold text-slate-700">
-                        <Clock className="mr-2 h-4 w-4" />
+                        <Clock className="mr-1 h-4 w-4" />
                         Duration
                     </div>
                 ),
@@ -436,8 +448,8 @@ export default function TodaysVisitorsTable({ visitors, activeQuickFilter, onQui
                     // Only show duration for ongoing and checked_out visits
                     if (status === 'checked_in') {
                         return (
-                            <div className="text-xs text-slate-500 italic">
-                                Pending validation
+                            <div className="text-xs text-slate-500 italic max-w-[90px]">
+                                Pending
                             </div>
                         );
                     }
@@ -452,18 +464,21 @@ export default function TodaysVisitorsTable({ visitors, activeQuickFilter, onQui
                     }
 
                     return (
-                        <DurationTracker
-                            startTime={visit.check_in_time}
-                            endTime={visit.check_out_time}
-                            status={status}
-                            variant="badge"
-                            showIcon={status === 'ongoing'}
-                        />
+                        <div className="max-w-[90px]">
+                            <DurationTracker
+                                startTime={visit.check_in_time}
+                                endTime={visit.check_out_time}
+                                status={status}
+                                variant="badge"
+                                showIcon={status === 'ongoing'}
+                            />
+                        </div>
                     );
                 },
             },
             {
                 id: 'action',
+                size: 140,
                 header: () => <div className="text-center font-semibold text-slate-700">Actions</div>,
                 cell: ({ row }) => {
                     const status = row.original.status;
@@ -475,15 +490,20 @@ export default function TodaysVisitorsTable({ visitors, activeQuickFilter, onQui
                                 variant="default"
                                 size="sm"
                                 onClick={() => handleValidateVisitor(visit)}
-                                className="bg-blue-600 px-4 font-medium shadow-sm hover:bg-blue-700"
+                                className="bg-blue-600 px-3 py-1 text-xs font-medium shadow-sm hover:bg-blue-700 w-full"
                             >
-                                <UserCheck className="mr-2 h-4 w-4" />
+                                <UserCheck className="mr-1 h-3 w-3" />
                                 Validate
                             </Button>
                         ),
                         ongoing: (
-                            <Button variant="destructive" size="sm" onClick={() => handleCheckout(visit)} className="px-4 font-medium shadow-sm">
-                                <LogOut className="mr-2 h-4 w-4" />
+                            <Button 
+                                variant="destructive" 
+                                size="sm" 
+                                onClick={() => handleCheckout(visit)} 
+                                className="px-3 py-1 text-xs font-medium shadow-sm w-full"
+                            >
+                                <LogOut className="mr-1 h-3 w-3" />
                                 Check Out
                             </Button>
                         ),
@@ -492,10 +512,10 @@ export default function TodaysVisitorsTable({ visitors, activeQuickFilter, onQui
                                 variant="outline"
                                 size="sm"
                                 onClick={() => router.get(`/visits/${row.original.id}?from=dashboard`, {}, { preserveState: true })}
-                                className="border-slate-200 px-4 font-medium shadow-sm hover:bg-slate-50"
+                                className="border-slate-200 px-3 py-1 text-xs font-medium shadow-sm hover:bg-slate-50 w-full"
                             >
-                                <FileText className="mr-2 h-4 w-4" />
-                                View Details
+                                <FileText className="mr-1 h-3 w-3" />
+                                Details
                             </Button>
                         ),
                         denied: (
@@ -503,57 +523,21 @@ export default function TodaysVisitorsTable({ visitors, activeQuickFilter, onQui
                                 variant="outline"
                                 size="sm"
                                 onClick={() => router.get(`/visits/${row.original.id}?from=dashboard`, {}, { preserveState: true })}
-                                className="border-red-200 px-4 font-medium shadow-sm hover:bg-red-50 text-red-600"
+                                className="border-red-200 px-3 py-1 text-xs font-medium shadow-sm hover:bg-red-50 text-red-600 w-full"
                             >
-                                <FileText className="mr-2 h-4 w-4" />
-                                View Details
+                                <FileText className="mr-1 h-3 w-3" />
+                                Details
                             </Button>
                         ),
                     };
 
                     return (
-                        <div className="flex justify-center" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex justify-center min-w-[120px]" onClick={(e) => e.stopPropagation()}>
                             {actionMap[status] || <span>-</span>}
                         </div>
                     );
                 },
             },
-            // {
-            //     id: 'more',
-            //     header: '',
-            //     cell: ({ row }) => {
-            //         const visitor = row.original;
-            //         return (
-            //             <div className="flex justify-center" onClick={(e)=> e.stopPropagation()}>
-            //                 <DropdownMenu>
-            //                     <DropdownMenuTrigger asChild>
-            //                         <Button variant="ghost" className="h-8 w-8 p-0 hover:bg-slate-100">
-            //                             <span className="sr-only">Open menu</span>
-            //                             <MoreVertical className="h-4 w-4" />
-            //                         </Button>
-            //                     </DropdownMenuTrigger>
-            //                     <DropdownMenuContent align="end" className="w-48">
-            //                         <DropdownMenuItem onClick={() => alert(`View ${visitor.visitor?.name}`)} className="cursor-pointer">
-            //                             <Eye className="mr-2 h-4 w-4" />
-            //                             View Details
-            //                         </DropdownMenuItem>
-            //                         <DropdownMenuItem onClick={() => alert(`Edit ${visitor.visitor?.name}`)} className="cursor-pointer">
-            //                             <Edit className="mr-2 h-4 w-4" />
-            //                             Edit Visitor
-            //                         </DropdownMenuItem>
-            //                         <DropdownMenuItem
-            //                             onClick={() => handleDeleteVisitor(visitor.visitor?.id)}
-            //                             className="cursor-pointer text-red-600 focus:bg-red-50 focus:text-red-700"
-            //                         >
-            //                             <Trash2 className="mr-2 h-4 w-4" />
-            //                             Delete
-            //                         </DropdownMenuItem>
-            //                     </DropdownMenuContent>
-            //                 </DropdownMenu>
-            //             </div>
-            //         );
-            //     },
-            // },
             // Virtual column for filtering
             {
                 id: 'quickFilter',
@@ -762,68 +746,94 @@ export default function TodaysVisitorsTable({ visitors, activeQuickFilter, onQui
                     </div>
                 </div>
 
-                {/* Enhanced Table */}
+                {/* Enhanced Table with sticky action column */}
                 <div className="overflow-hidden rounded-xl border border-slate-200/60 bg-white shadow-sm backdrop-blur-sm">
-                    <Table>
-                        <TableHeader>
-                            {table.getHeaderGroups().map((headerGroup) => (
-                                <TableRow
-                                    key={headerGroup.id}
-                                    className="border-b border-slate-200 bg-gradient-to-r from-slate-50/80 to-slate-100/50"
-                                >
-                                    {headerGroup.headers.map((header) => (
-                                        <TableHead key={header.id} className="px-6 py-4 text-left font-semibold">
-                                            {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
-                                        </TableHead>
+                    <div className="overflow-x-auto">
+                        <div className="relative">
+                            <Table className="w-full min-w-max">
+                                <TableHeader>
+                                    {table.getHeaderGroups().map((headerGroup) => (
+                                        <TableRow
+                                            key={headerGroup.id}
+                                            className="border-b border-slate-200 bg-gradient-to-r from-slate-50/80 to-slate-100/50"
+                                        >
+                                            {headerGroup.headers.map((header, index) => {
+                                                const isActionColumn = header.column.id === 'action';
+                                                return (
+                                                    <TableHead 
+                                                        key={header.id} 
+                                                        className={cn(
+                                                            "px-3 py-3 text-left font-semibold whitespace-nowrap",
+                                                            isActionColumn && "md:sticky md:right-0 md:z-10 md:bg-gradient-to-r md:from-slate-50/80 md:to-slate-100/50 md:shadow-[-8px_0_8px_-4px_rgba(0,0,0,0.08)]"
+                                                        )}
+                                                        style={{ width: header.column.columnDef.size }}
+                                                    >
+                                                        {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
+                                                    </TableHead>
+                                                );
+                                            })}
+                                        </TableRow>
                                     ))}
-                                </TableRow>
-                            ))}
-                        </TableHeader>
-                        <TableBody>
-                            {table.getRowModel().rows?.length ? (
-                                table.getRowModel().rows.map((row, index) => (
-                                    <TableRow
-                                        key={row.id}
-                                        onClick={() => {
-                                            router.get(`/visits/${row.original.id}?from=dashboard`, {}, { preserveState: true });
-                                        }}
-                                        className={`cursor-pointer border-b border-slate-100/50 transition-all duration-200 hover:bg-gradient-to-r hover:from-slate-50/50 hover:to-blue-50/30 ${
-                                            index % 2 === 0 ? 'bg-white' : 'bg-slate-50/20'
-                                        }`}
-                                    >
-                                        {row.getVisibleCells().map((cell) => (
-                                            <TableCell key={cell.id} className="px-3 py-2">
-                                                {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                                </TableHeader>
+                                <TableBody>
+                                    {table.getRowModel().rows?.length ? (
+                                        table.getRowModel().rows.map((row, index) => (
+                                            <TableRow
+                                                key={row.id}
+                                                onClick={() => {
+                                                    router.get(`/visits/${row.original.id}?from=dashboard`, {}, { preserveState: true });
+                                                }}
+                                                className={`cursor-pointer border-b border-slate-100/50 transition-all duration-200 hover:bg-gradient-to-r hover:from-slate-50/50 hover:to-blue-50/30 ${
+                                                    index % 2 === 0 ? 'bg-white' : 'bg-slate-50/20'
+                                                }`}
+                                            >
+                                                {row.getVisibleCells().map((cell) => {
+                                                    const isActionColumn = cell.column.id === 'action';
+                                                    return (
+                                                        <TableCell 
+                                                            key={cell.id} 
+                                                            className={cn(
+                                                                "px-3 py-2.5",
+                                                                isActionColumn && "md:sticky md:right-0 md:z-10 md:shadow-[-8px_0_8px_-4px_rgba(0,0,0,0.08)]",
+                                                                isActionColumn && (index % 2 === 0 ? 'md:bg-white' : 'md:bg-slate-50/20'),
+                                                                isActionColumn && "md:hover:bg-inherit"
+                                                            )}
+                                                            style={{ width: cell.column.columnDef.size }}
+                                                        >
+                                                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                                                        </TableCell>
+                                                    );
+                                                })}
+                                            </TableRow>
+                                        ))
+                                    ) : (
+                                        <TableRow>
+                                            <TableCell colSpan={columns.length} className="h-40 text-center">
+                                                <div className="flex flex-col items-center justify-center space-y-4">
+                                                    <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-slate-100 to-slate-200">
+                                                        <CalendarIcon className="h-8 w-8 text-slate-400" />
+                                                    </div>
+                                                    <div className="space-y-2">
+                                                        <p className="text-lg font-semibold text-slate-900">No visitors today</p>
+                                                        <p className="max-w-md text-sm text-slate-500">
+                                                            {hasActiveFilters
+                                                                ? 'No visitors match your current filters for today.'
+                                                                : 'No visitors have checked in today yet.'}
+                                                        </p>
+                                                        {hasActiveFilters && (
+                                                            <Button variant="outline" size="sm" onClick={clearAllFilters} className="mt-3">
+                                                                Clear all filters
+                                                            </Button>
+                                                        )}
+                                                    </div>
+                                                </div>
                                             </TableCell>
-                                        ))}
-                                    </TableRow>
-                                ))
-                            ) : (
-                                <TableRow>
-                                    <TableCell colSpan={columns.length} className="h-40 text-center">
-                                        <div className="flex flex-col items-center justify-center space-y-4">
-                                            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-slate-100 to-slate-200">
-                                                <CalendarIcon className="h-8 w-8 text-slate-400" />
-                                            </div>
-                                            <div className="space-y-2">
-                                                <p className="text-lg font-semibold text-slate-900">No visitors today</p>
-                                                <p className="max-w-md text-sm text-slate-500">
-                                                    {hasActiveFilters
-                                                        ? 'No visitors match your current filters for today.'
-                                                        : 'No visitors have checked in today yet.'}
-                                                </p>
-                                                {hasActiveFilters && (
-                                                    <Button variant="outline" size="sm" onClick={clearAllFilters} className="mt-3">
-                                                        Clear all filters
-                                                    </Button>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </TableCell>
-                                </TableRow>
-                            )}
-                        </TableBody>
-                    </Table>
+                                        </TableRow>
+                                    )}
+                                </TableBody>
+                            </Table>
+                        </div>
+                    </div>
                 </div>
 
                 {/* Enhanced Bottom Controls */}
