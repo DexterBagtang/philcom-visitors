@@ -20,6 +20,12 @@ class extends Migration {
             $table->string('id_number_checked')->nullable();
             $table->text('validation_notes')->nullable();
             $table->timestamps();
+
+            // Composite indexes for better query performance
+            $table->index(['status', 'created_at'], 'idx_visits_status_created');
+            $table->index(['check_in_time', 'created_at'], 'idx_visits_checkin_created');
+            $table->index(['visitor_id', 'status'], 'idx_visits_visitor_status');
+            $table->index('validated_by', 'idx_visits_validated_by');
         });
     }
 

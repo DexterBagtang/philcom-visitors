@@ -17,6 +17,10 @@ return new class extends Migration {
             $table->timestamps();
 
             $table->unique(['visit_id', 'badge_id']); // Ensure 1 badge per visit
+
+            // Composite indexes for better query performance
+            $table->index(['visit_id', 'returned_at'], 'idx_badge_assignments_visit_returned');
+            $table->index(['badge_id', 'returned_at'], 'idx_badge_assignments_badge_returned');
         });
     }
 
