@@ -27,6 +27,14 @@ class DatabaseSeeder extends Seeder
             'password' => bcrypt('asdfasdf'),
         ]);
 
+        User::factory()->create([
+            'name' => 'Lobby User',
+            'username' => 'philcom.lobby',
+            'email' => 'lobby@philcom.com',
+            'role' => 'admin',
+            'password' => bcrypt('philcom_lobby'),
+        ]);
+
 //        User::factory()->count(5)->create();
 //
 //        // Visitor badges
