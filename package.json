@@ -64,6 +64,7 @@
         "react-data-grid": "^7.0.0-beta.57",
         "react-day-picker": "^9.9.0",
         "react-dom": "^19.0.0",
+        "react-simple-keyboard": "^3.8.130",
         "sonner": "^2.0.7",
         "tailwind-merge": "^3.0.1",
         "tailwindcss": "^4.0.0",

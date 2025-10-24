@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { router } from '@inertiajs/react';
-import { AlertCircle, Building, Check, Clock, FileText, IdCard, Loader, User, Grid3x3, X } from 'lucide-react';
+import { AlertCircle, Building, Check, Clock, FileText, IdCard, Loader, User, Grid3x3, X, Shield, Calendar, Target } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
@@ -200,94 +200,157 @@ export default function ValidationDialog({ isOpen, onClose, visitor, visit, onSu
         onClose();
     };
 
+    // Helper function to get visitor type badge color
+    const getVisitorTypeBadge = (type) => {
+        const typeColors = {
+            client: 'bg-blue-100 text-blue-700 border-blue-300',
+            employee: 'bg-green-100 text-green-700 border-green-300',
+            contractor: 'bg-amber-100 text-amber-700 border-amber-300',
+            vendor: 'bg-purple-100 text-purple-700 border-purple-300',
+            visitor: 'bg-gray-100 text-gray-700 border-gray-300',
+        };
+        return typeColors[type?.toLowerCase()] || typeColors.visitor;
+    };
+
     return (
         <Dialog open={isOpen} onOpenChange={handleClose}>
-            <DialogContent className="sm:max-w-[600px]" onInteractOutside={(e) => e.preventDefault()}>
-                <DialogHeader>
-                    <DialogTitle className="flex items-center gap-2">
-                        <IdCard className="h-5 w-5" />
-                        Validate Visitor
+            <DialogContent className="sm:max-w-[650px] !max-h-[90vh] !max-w-3xl overflow-y-auto" onInteractOutside={(e) => e.preventDefault()}>
+                <DialogHeader className="space-y-3 pb-4 border-b">
+                    <DialogTitle className="flex items-center gap-2.5 text-xl">
+                        <div className="rounded-lg bg-gradient-to-br from-blue-500 to-blue-600 p-2 shadow-sm">
+                            <Shield className="h-5 w-5 text-white" />
+                        </div>
+                        <span className="bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent">
+                            Validate Visitor
+                        </span>
                     </DialogTitle>
-                    <DialogDescription>Please verify the visitor's identity and assign a badge to complete the check-in process.</DialogDescription>
+                    <DialogDescription className="text-base">
+                        Please verify the visitor's identity and assign a badge to complete the check-in process.
+                    </DialogDescription>
                 </DialogHeader>
 
-                <form onSubmit={handleSubmit} className="space-y-6">
-                    {/* Visitor Information Display */}
-                    <div className="space-y-3 rounded-lg bg-gray-50 p-4">
-                        <h3 className="mb-3 text-sm font-semibold text-gray-700">Visitor Information</h3>
+                <form onSubmit={handleSubmit} className="space-y-6 pt-2">
+                    {/* Enhanced Visitor Information Display */}
+                    <div className="space-y-4 rounded-xl border-2 border-blue-100 bg-gradient-to-br from-blue-50/50 to-indigo-50/30 p-5 shadow-sm">
+                        <div className="flex items-center justify-between">
+                            <h3 className="flex items-center gap-2 text-base font-semibold text-gray-800">
+                                <User className="h-4.5 w-4.5 text-blue-600" />
+                                Visitor Information
+                            </h3>
+                            <Badge className={cn('border px-2.5 py-0.5 text-xs font-medium', getVisitorTypeBadge(visitor.type))}>
+                                {visitor.type}
+                            </Badge>
+                        </div>
 
-                        <div className="grid grid-cols-2 gap-4">
-                            <div className="flex items-center gap-2">
-                                <User className="h-4 w-4 text-gray-500" />
-                                <div>
-                                    <p className="text-sm font-medium">{visitor.name}</p>
-                                    <p className="text-xs text-gray-500">Name</p>
+                        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                            {/* Name */}
+                            <div className="group rounded-lg bg-white/60 p-3 shadow-sm transition-all hover:shadow-md">
+                                <div className="flex items-start gap-3">
+                                    <div className="rounded-md bg-blue-100 p-2 transition-colors group-hover:bg-blue-200">
+                                        <User className="h-4 w-4 text-blue-600" />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Name</p>
+                                        <p className="text-sm font-semibold text-gray-900 truncate mt-0.5">{visitor.name}</p>
+                                    </div>
                                 </div>
                             </div>
 
-                            <div className="flex items-center gap-2">
-                                <Building className="h-4 w-4 text-gray-500" />
-                                <div>
-                                    <p className="text-sm font-medium">{visitor.company}</p>
-                                    <p className="text-xs text-gray-500">Company</p>
+                            {/* Company */}
+                            <div className="group rounded-lg bg-white/60 p-3 shadow-sm transition-all hover:shadow-md">
+                                <div className="flex items-start gap-3">
+                                    <div className="rounded-md bg-purple-100 p-2 transition-colors group-hover:bg-purple-200">
+                                        <Building className="h-4 w-4 text-purple-600" />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Company</p>
+                                        <p className="text-sm font-semibold text-gray-900 truncate mt-0.5">{visitor.company}</p>
+                                    </div>
                                 </div>
                             </div>
 
-                            <div className="flex items-center gap-2">
-                                <IdCard className="h-4 w-4 text-gray-500" />
-                                <div>
-                                    <p className="text-sm font-medium">{visitor.type}</p>
-                                    <p className="text-xs text-gray-500">Type</p>
+                            {/* Check-in Time */}
+                            <div className="group rounded-lg bg-white/60 p-3 shadow-sm transition-all hover:shadow-md">
+                                <div className="flex items-start gap-3">
+                                    <div className="rounded-md bg-green-100 p-2 transition-colors group-hover:bg-green-200">
+                                        <Clock className="h-4 w-4 text-green-600" />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Check-in Time</p>
+                                        <p className="text-sm font-semibold text-gray-900 truncate mt-0.5">
+                                            {new Date(visit.check_in_time).toLocaleString('en-US', {
+                                                month: 'short',
+                                                day: 'numeric',
+                                                hour: '2-digit',
+                                                minute: '2-digit'
+                                            })}
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
 
-                            <div className="flex items-center gap-2">
-                                <Clock className="h-4 w-4 text-gray-500" />
-                                <div>
-                                    <p className="text-sm font-medium">{new Date(visit.check_in_time).toLocaleString()}</p>
-                                    <p className="text-xs text-gray-500">Check-in Time</p>
+                            {/* Visiting */}
+                            <div className="group rounded-lg bg-white/60 p-3 shadow-sm transition-all hover:shadow-md">
+                                <div className="flex items-start gap-3">
+                                    <div className="rounded-md bg-amber-100 p-2 transition-colors group-hover:bg-amber-200">
+                                        <Target className="h-4 w-4 text-amber-600" />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Visiting</p>
+                                        <p className="text-sm font-semibold text-gray-900 truncate mt-0.5">{visitor.person_to_visit}</p>
+                                    </div>
                                 </div>
                             </div>
 
-                            <div className="flex items-center gap-2">
-                                <User className="h-4 w-4 text-gray-500" />
-                                <div>
-                                    <p className="text-sm font-medium">{visitor.person_to_visit}</p>
-                                    <p className="text-xs text-gray-500">Visiting</p>
-                                </div>
-                            </div>
-
-                            <div className="flex items-start gap-2">
-                                <FileText className="mt-0.5 h-4 w-4 text-gray-500" />
-                                <div>
-                                    <p className="text-sm font-medium">{visitor.visit_purpose}</p>
-                                    <p className="text-xs text-gray-500">Purpose of Visit</p>
+                            {/* Purpose - Full Width */}
+                            <div className="group rounded-lg bg-white/60 p-3 shadow-sm transition-all hover:shadow-md sm:col-span-2">
+                                <div className="flex items-start gap-3">
+                                    <div className="rounded-md bg-indigo-100 p-2 transition-colors group-hover:bg-indigo-200">
+                                        <FileText className="h-4 w-4 text-indigo-600" />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Purpose of Visit</p>
+                                        <p className="text-sm font-semibold text-gray-900 mt-0.5">{visitor.visit_purpose}</p>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     {/* ID Verification Section */}
-                    <div className="space-y-4">
-                        <h3 className="text-sm font-semibold text-gray-700">ID Verification</h3>
+                    <div className="space-y-4 rounded-xl border border-gray-200 bg-gradient-to-br from-gray-50/50 to-slate-50/30 p-5">
+                        <h3 className="flex items-center gap-2 text-base font-semibold text-gray-800">
+                            <div className="rounded-md bg-slate-100 p-1.5">
+                                <Shield className="h-4 w-4 text-slate-600" />
+                            </div>
+                            ID Verification
+                        </h3>
 
                         <div className="space-y-2">
-                            <Label htmlFor="id_type">ID Type *</Label>
+                            <Label htmlFor="id_type" className="text-sm font-medium">ID Type *</Label>
                             <Select value={formData.id_type_checked} onValueChange={(value) => handleInputChange('id_type_checked', value)}>
-                                <SelectTrigger className={errors.id_type_checked ? 'border-red-500' : ''}>
+                                <SelectTrigger className={cn(
+                                    'h-11 transition-all',
+                                    errors.id_type_checked
+                                        ? 'border-red-500 focus:ring-red-500'
+                                        : 'focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+                                )}>
                                     <SelectValue placeholder="Select ID type" />
                                 </SelectTrigger>
                                 <SelectContent>
                                     {idTypes.map((type) => (
                                         <SelectItem key={type} value={type}>
-                                            {type}
+                                            <div className="flex items-center gap-2">
+                                                <IdCard className="h-3.5 w-3.5 text-gray-500" />
+                                                {type}
+                                            </div>
                                         </SelectItem>
                                     ))}
                                 </SelectContent>
                             </Select>
                             {errors.id_type_checked && (
-                                <p className="flex items-center gap-1 text-sm text-red-500">
-                                    <AlertCircle className="h-3 w-3" />
+                                <p className="flex items-center gap-1.5 text-sm text-red-600 animate-in fade-in slide-in-from-top-1">
+                                    <AlertCircle className="h-3.5 w-3.5" />
                                     {errors.id_type_checked}
                                 </p>
                             )}
@@ -295,8 +358,15 @@ export default function ValidationDialog({ isOpen, onClose, visitor, visit, onSu
                     </div>
 
                     {/* Badge Assignment Section */}
-                    <div className="space-y-2">
-                        <Label htmlFor="badge-input">Assign Badge *</Label>
+                    <div className="space-y-3 rounded-xl border border-emerald-200 bg-gradient-to-br from-emerald-50/50 to-green-50/30 p-5">
+                        <h3 className="flex items-center gap-2 text-base font-semibold text-gray-800">
+                            <div className="rounded-md bg-emerald-100 p-1.5">
+                                <IdCard className="h-4 w-4 text-emerald-600" />
+                            </div>
+                            Badge Assignment
+                        </h3>
+
+                        <Label htmlFor="badge-input" className="text-sm font-medium">Assign Badge *</Label>
 
                         <div className="relative flex gap-2">
                             <div className="relative flex-1">
@@ -307,38 +377,61 @@ export default function ValidationDialog({ isOpen, onClose, visitor, visit, onSu
                                     onChange={(e) => handleBadgeInputChange(e.target.value)}
                                     onFocus={() => setShowSuggestions(badgeInput.length > 0)}
                                     onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                                    className={cn(errors.selected_badge_id && 'border-red-500')}
+                                    className={cn(
+                                        'h-11 transition-all',
+                                        errors.selected_badge_id
+                                            ? 'border-red-500 focus:ring-red-500'
+                                            : 'focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500'
+                                    )}
                                     autoComplete="off"
                                 />
 
-                                {/* Suggestions Dropdown */}
+                                {/* Enhanced Suggestions Dropdown */}
                                 {showSuggestions && filteredBadges.length > 0 && (
-                                    <div className="absolute z-50 mt-1 max-h-40 w-full overflow-y-auto rounded-md border bg-white shadow-lg">
-                                        {filteredBadges.slice(0, 8).map((badge) => (
+                                    <div className="absolute z-50 mt-2 max-h-48 w-full overflow-y-auto rounded-lg border-2 border-emerald-200 bg-white shadow-xl animate-in fade-in slide-in-from-top-2">
+                                        {filteredBadges.slice(0, 8).map((badge, index) => (
                                             <div
                                                 key={badge.id}
                                                 onClick={() => handleSuggestionSelect(badge)}
-                                                className="flex cursor-pointer items-center justify-between border-b p-2 last:border-b-0 hover:bg-gray-50"
+                                                className={cn(
+                                                    'flex cursor-pointer items-center justify-between border-b p-3 transition-all last:border-b-0',
+                                                    selectedBadge?.id === badge.id
+                                                        ? 'bg-emerald-50 hover:bg-emerald-100'
+                                                        : 'hover:bg-gray-50'
+                                                )}
                                             >
-                                                <div className="flex items-center space-x-2">
-                                                    {selectedBadge?.id === badge.id && <Check className="h-3 w-3 text-green-600" />}
-                                                    <span className="text-sm font-medium">Badge #{badge.badge_number}</span>
+                                                <div className="flex items-center gap-2.5">
+                                                    {selectedBadge?.id === badge.id && (
+                                                        <div className="rounded-full bg-emerald-500 p-0.5">
+                                                            <Check className="h-3 w-3 text-white" />
+                                                        </div>
+                                                    )}
+                                                    <IdCard className={cn(
+                                                        'h-4 w-4',
+                                                        selectedBadge?.id === badge.id ? 'text-emerald-600' : 'text-gray-400'
+                                                    )} />
+                                                    <span className={cn(
+                                                        'text-sm font-semibold',
+                                                        selectedBadge?.id === badge.id ? 'text-emerald-700' : 'text-gray-700'
+                                                    )}>
+                                                        Badge #{badge.badge_number}
+                                                    </span>
                                                 </div>
-                                                <Badge variant="outline" className="text-xs">
+                                                <Badge variant="outline" className="text-xs bg-white">
                                                     {badge.location || 'Available'}
                                                 </Badge>
                                             </div>
                                         ))}
                                         {filteredBadges.length > 8 && (
-                                            <div className="border-t p-2 text-center text-xs text-gray-500">
-                                                {filteredBadges.length - 8} more badges available...
+                                            <div className="border-t bg-gray-50 p-2.5 text-center text-xs font-medium text-gray-600">
+                                                + {filteredBadges.length - 8} more available
                                             </div>
                                         )}
                                     </div>
                                 )}
                             </div>
 
-                            {/* Browse Badges Button with Tooltip */}
+                            {/* Enhanced Browse Badges Button with Tooltip */}
                             <TooltipProvider>
                                 <Tooltip>
                                     <TooltipTrigger asChild>
@@ -349,15 +442,17 @@ export default function ValidationDialog({ isOpen, onClose, visitor, visit, onSu
                                             disabled={availableBadges.length === 0}
                                             onClick={() => setShowBadgePanel(!showBadgePanel)}
                                             className={cn(
-                                                'shrink-0',
-                                                showBadgePanel && 'bg-blue-50 border-blue-400'
+                                                'h-11 w-11 shrink-0 transition-all',
+                                                showBadgePanel
+                                                    ? 'bg-emerald-100 border-emerald-400 text-emerald-700 hover:bg-emerald-200'
+                                                    : 'hover:bg-emerald-50 hover:border-emerald-300'
                                             )}
                                         >
-                                            <Grid3x3 className="h-4 w-4" />
+                                            <Grid3x3 className="h-4.5 w-4.5" />
                                         </Button>
                                     </TooltipTrigger>
-                                    <TooltipContent>
-                                        <p>Browse the available badges</p>
+                                    <TooltipContent side="top" className="bg-gray-900">
+                                        <p className="font-medium">Browse all available badges</p>
                                     </TooltipContent>
                                 </Tooltip>
                             </TooltipProvider>
@@ -385,7 +480,7 @@ export default function ValidationDialog({ isOpen, onClose, visitor, visit, onSu
                                     </Button>
                                 </div>
                                 <div className="max-h-[280px] overflow-y-auto p-3">
-                                    <div className="grid grid-cols-3 gap-2">
+                                    <div className="grid grid-cols-4 gap-2">
                                         {availableBadges.map((badge) => (
                                             <button
                                                 key={badge.id}
@@ -431,80 +526,121 @@ export default function ValidationDialog({ isOpen, onClose, visitor, visit, onSu
                             </div>
                         )}
 
-                        {/* Selected Badge Display */}
+                        {/* Enhanced Selected Badge Display */}
                         {selectedBadge && (
-                            <div className="flex items-center space-x-2 rounded border border-green-200 bg-green-50 p-2">
-                                <Check className="h-4 w-4 text-green-600" />
-                                <span className="text-sm text-green-800">Badge #{selectedBadge.badge_number} selected</span>
-                                <Badge variant="outline" className="text-xs">
-                                    {selectedBadge.location || 'Available'}
-                                </Badge>
+                            <div className="flex items-center gap-2.5 rounded-lg border-2 border-emerald-300 bg-gradient-to-r from-emerald-50 to-green-50 p-3 shadow-sm animate-in fade-in slide-in-from-top-2">
+                                <div className="rounded-full bg-emerald-500 p-1">
+                                    <Check className="h-3.5 w-3.5 text-white" />
+                                </div>
+                                <IdCard className="h-4.5 w-4.5 text-emerald-600" />
+                                <span className="text-sm font-semibold text-emerald-800">
+                                    Badge #{selectedBadge.badge_number} selected
+                                </span>
+                                {selectedBadge.location && (
+                                    <Badge variant="outline" className="ml-auto text-xs bg-white border-emerald-300 text-emerald-700">
+                                        {selectedBadge.location}
+                                    </Badge>
+                                )}
                             </div>
                         )}
 
                         {errors.selected_badge_id && (
-                            <p className="flex items-center gap-1 text-sm text-red-500">
-                                <AlertCircle className="h-3 w-3" />
+                            <p className="flex items-center gap-1.5 rounded-md bg-red-50 p-2.5 text-sm font-medium text-red-700 animate-in fade-in slide-in-from-top-1">
+                                <AlertCircle className="h-4 w-4" />
                                 {errors.selected_badge_id}
                             </p>
                         )}
 
                         {availableBadges.length === 0 && (
-                            <p className="flex items-center gap-1 text-sm text-amber-600">
-                                <AlertCircle className="h-3 w-3" />
+                            <p className="flex items-center gap-1.5 rounded-md bg-amber-50 p-2.5 text-sm font-medium text-amber-700">
+                                <AlertCircle className="h-4 w-4" />
                                 No badges available. Please check badge inventory.
                             </p>
                         )}
 
                         {badgeInput && filteredBadges.length === 0 && availableBadges.length > 0 && (
-                            <p className="flex items-center gap-1 text-sm text-gray-500">
-                                <AlertCircle className="h-3 w-3" />
+                            <p className="flex items-center gap-1.5 rounded-md bg-blue-50 p-2.5 text-sm text-blue-700">
+                                <AlertCircle className="h-4 w-4" />
                                 No badges found matching "{badgeInput}". Click the grid icon to browse all badges.
                             </p>
                         )}
                     </div>
 
-                    {/* Validation Notes */}
-                    <div className="space-y-2">
-                        <Label htmlFor="notes">Validation Notes (Optional)</Label>
+                    {/* Enhanced Validation Notes */}
+                    <div className="space-y-3 rounded-xl border border-gray-200 bg-gradient-to-br from-gray-50/50 to-slate-50/30 p-5">
+                        <div className="flex items-center gap-2">
+                            <div className="rounded-md bg-slate-100 p-1.5">
+                                <FileText className="h-4 w-4 text-slate-600" />
+                            </div>
+                            <Label htmlFor="notes" className="text-base font-semibold text-gray-800">
+                                Validation Notes <span className="text-sm font-normal text-gray-500">(Optional)</span>
+                            </Label>
+                        </div>
                         <Textarea
                             id="notes"
-                            className={errors.validation_notes ? 'border-red-500' : ''}
-                            placeholder="Add any additional notes about the validation process..."
+                            className={cn(
+                                'min-h-[80px] resize-none transition-all',
+                                errors.validation_notes
+                                    ? 'border-red-500 focus:ring-red-500'
+                                    : 'focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+                            )}
+                            placeholder="Add any additional notes about the validation process (e.g., special instructions, observations, or concerns)..."
                             value={formData.validation_notes}
                             onChange={(e) => handleInputChange('validation_notes', e.target.value)}
                             rows={3}
                         />
                         {errors.validation_notes && (
-                            <p className="flex items-center gap-1 text-sm text-red-500">
-                                <AlertCircle className="h-3 w-3" />
+                            <p className="flex items-center gap-1.5 rounded-md bg-red-50 p-2.5 text-sm font-medium text-red-700 animate-in fade-in slide-in-from-top-1">
+                                <AlertCircle className="h-4 w-4" />
                                 {errors.validation_notes}
                             </p>
                         )}
                     </div>
 
-                    <DialogFooter>
-                        <Button type="button" disabled={isDenying || isSubmitting} variant="destructive" onClick={handleDeny}>
+                    <DialogFooter className="gap-2 sm:gap-2">
+                        <Button
+                            type="button"
+                            disabled={isDenying || isSubmitting}
+                            variant="destructive"
+                            onClick={handleDeny}
+                            className="h-11 font-semibold shadow-sm transition-all hover:shadow-md"
+                        >
                             {isDenying ? (
                                 <span className="flex items-center gap-2">
                                     <Loader className="h-4 w-4 animate-spin" />
                                     Denying...
                                 </span>
                             ) : (
-                                'Deny'
+                                <span className="flex items-center gap-2">
+                                    <X className="h-4 w-4" />
+                                    Deny
+                                </span>
                             )}
                         </Button>
-                        <Button type="button" variant="outline" onClick={handleClose} disabled={isSubmitting || isDenying}>
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={handleClose}
+                            disabled={isSubmitting || isDenying}
+                            className="h-11 font-semibold"
+                        >
                             Cancel
                         </Button>
-                        <Button type="submit" disabled={isSubmitting || isDenying || availableBadges.length === 0} className="bg-green-600 hover:bg-green-700">
+                        <Button
+                            type="submit"
+                            disabled={isSubmitting || isDenying || availableBadges.length === 0}
+                            className="h-11 bg-gradient-to-r from-green-600 to-emerald-600 font-semibold shadow-sm transition-all hover:from-green-700 hover:to-emerald-700 hover:shadow-md"
+                        >
                             {isSubmitting ? (
                                 <span className="flex items-center gap-2">
                                     <Loader className="h-4 w-4 animate-spin" />
                                     Validating...
                                 </span>
                             ) : (
-                                'Validate & Assign Badge'
+                                <span className="flex items-center gap-2">
+                                    <Check className="h-4 w-4" />
+                                    Validate & Assign Badge
+                                </span>
                             )}
                         </Button>
                     </DialogFooter>

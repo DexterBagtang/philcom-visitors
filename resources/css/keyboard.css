@@ -1,0 +1,100 @@
+/* Custom styles for react-simple-keyboard */
+
+/* Override default keyboard styles */
+.simple-keyboard {
+    background-color: transparent !important;
+    border-radius: 8px !important;
+}
+
+.simple-keyboard .hg-button {
+    height: 45px !important;
+    min-width: 45px !important;
+    background-color: white !important;
+    border: 1px solid #e5e7eb !important;
+    border-radius: 6px !important;
+    box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05) !important;
+    color: #1f2937 !important;
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    transition: all 0.15s ease !important;
+}
+
+.simple-keyboard .hg-button:active,
+.simple-keyboard .hg-button.hg-activeButton {
+    background-color: #3b82f6 !important;
+    color: white !important;
+    border-color: #3b82f6 !important;
+    transform: scale(0.95) !important;
+}
+
+.simple-keyboard .hg-button:hover {
+    background-color: #f3f4f6 !important;
+    border-color: #d1d5db !important;
+}
+
+/* Special buttons styling */
+.simple-keyboard .hg-blue-button {
+    background-color: #eff6ff !important;
+    border-color: #bfdbfe !important;
+    color: #1e40af !important;
+    font-weight: 600 !important;
+}
+
+.simple-keyboard .hg-blue-button:hover {
+    background-color: #dbeafe !important;
+    border-color: #93c5fd !important;
+}
+
+.simple-keyboard .hg-blue-button:active,
+.simple-keyboard .hg-blue-button.hg-activeButton {
+    background-color: #3b82f6 !important;
+    color: white !important;
+    border-color: #2563eb !important;
+}
+
+/* Space button */
+.simple-keyboard .hg-button[data-skbtn="{space}"] {
+    min-width: 300px !important;
+}
+
+/* Backspace button */
+.simple-keyboard .hg-button[data-skbtn="{bksp}"] {
+    min-width: 70px !important;
+}
+
+/* Shift buttons */
+.simple-keyboard .hg-button[data-skbtn="{shift}"] {
+    min-width: 60px !important;
+}
+
+/* Row spacing */
+.simple-keyboard .hg-row {
+    margin-bottom: 6px !important;
+}
+
+.simple-keyboard .hg-row:last-child {
+    margin-bottom: 0 !important;
+}
+
+/* Button spacing */
+.simple-keyboard .hg-button {
+    margin: 0 3px !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+    .simple-keyboard .hg-button {
+        height: 40px !important;
+        min-width: 40px !important;
+        font-size: 13px !important;
+    }
+
+    .simple-keyboard .hg-button[data-skbtn="{space}"] {
+        min-width: 200px !important;
+    }
+
+    .simple-keyboard .hg-button[data-skbtn="{bksp}"],
+    .simple-keyboard .hg-button[data-skbtn="{shift}"] {
+        min-width: 50px !important;
+    }
+}
