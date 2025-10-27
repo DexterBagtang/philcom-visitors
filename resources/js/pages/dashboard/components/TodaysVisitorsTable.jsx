@@ -118,16 +118,16 @@ export default function TodaysVisitorsTable({ visitors, activeQuickFilter, onQui
     // Echo listener for real-time updates
     useEchoPublic('visits', 'VisitCreated', (event) => {
         const visitorName = event.visit.visitor?.name ?? 'Unknown';
-        
+
         // Play notification sound
         playNotificationSound();
-        
+
         // Show toast notification
-        toast.info(`Visitor ${visitorName} checked in`, { 
-            position: 'top-center', 
-            duration: 5000 
+        toast.info(`Visitor ${visitorName} checked in`, {
+            position: 'top-center',
+            duration: 5000
         });
-        
+
         // Reload data
         router.reload();
     });
@@ -223,11 +223,12 @@ export default function TodaysVisitorsTable({ visitors, activeQuickFilter, onQui
         } finally {
             setIsLoadingBadges(false);
         }
-    }, []);
+    }, [showValidationDialog]);
 
     // Effects
     useEffect(() => {
         fetchAvailableBadges();
+        console.log('fetchAvailableBadges');
     }, [fetchAvailableBadges, showValidationDialog]);
 
     useEffect(() => {
@@ -444,7 +445,7 @@ export default function TodaysVisitorsTable({ visitors, activeQuickFilter, onQui
                 cell: ({ row }) => {
                     const visit = row.original;
                     const status = visit.status;
-                    
+
                     // Only show duration for ongoing and checked_out visits
                     if (status === 'checked_in') {
                         return (
@@ -497,10 +498,10 @@ export default function TodaysVisitorsTable({ visitors, activeQuickFilter, onQui
                             </Button>
                         ),
                         ongoing: (
-                            <Button 
-                                variant="destructive" 
-                                size="sm" 
-                                onClick={() => handleCheckout(visit)} 
+                            <Button
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => handleCheckout(visit)}
                                 className="px-3 py-1 text-xs font-medium shadow-sm w-full"
                             >
                                 <LogOut className="mr-1 h-3 w-3" />
@@ -760,8 +761,8 @@ export default function TodaysVisitorsTable({ visitors, activeQuickFilter, onQui
                                             {headerGroup.headers.map((header, index) => {
                                                 const isActionColumn = header.column.id === 'action';
                                                 return (
-                                                    <TableHead 
-                                                        key={header.id} 
+                                                    <TableHead
+                                                        key={header.id}
                                                         className={cn(
                                                             "px-3 py-3 text-left font-semibold whitespace-nowrap",
                                                             isActionColumn && "md:sticky md:right-0 md:z-10 md:bg-gradient-to-r md:from-slate-50/80 md:to-slate-100/50 md:shadow-[-8px_0_8px_-4px_rgba(0,0,0,0.08)]"
@@ -790,8 +791,8 @@ export default function TodaysVisitorsTable({ visitors, activeQuickFilter, onQui
                                                 {row.getVisibleCells().map((cell) => {
                                                     const isActionColumn = cell.column.id === 'action';
                                                     return (
-                                                        <TableCell 
-                                                            key={cell.id} 
+                                                        <TableCell
+                                                            key={cell.id}
                                                             className={cn(
                                                                 "px-3 py-2.5",
                                                                 isActionColumn && "md:sticky md:right-0 md:z-10 md:shadow-[-8px_0_8px_-4px_rgba(0,0,0,0.08)]",
