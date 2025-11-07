@@ -296,9 +296,6 @@ Sound file: `public/sounds/notification.mp3`
 - `EXPORT_FEATURE_README.md` - Detailed export feature documentation
 - `NOTIFICATION_SOUND_SETUP.md` - Notification sound implementation guide
 
-## License
-
-[Your License Here]
 
 ## Support
 
