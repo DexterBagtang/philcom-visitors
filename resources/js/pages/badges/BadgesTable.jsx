@@ -22,6 +22,11 @@ const SORT_OPTIONS = {
     DESC: 'desc',
 };
 
+const SORT_COLUMNS = {
+    BADGE_NUMBER: 'badge_number',
+    CREATED_AT: 'created_at',
+};
+
 // Custom hooks for better separation of concerns
 const useBadgeFiltering = (badges, searchInput) => {
     return useMemo(() => {
@@ -37,13 +42,22 @@ const useBadgeFiltering = (badges, searchInput) => {
     }, [badges, searchInput]);
 };
 
-const useBadgeSorting = (badges, sortOrder) => {
+const useBadgeSorting = (badges, sortColumn, sortOrder) => {
     return useMemo(() => {
         return [...badges].sort((a, b) => {
-            const comparison = a.badge_number.toLowerCase().localeCompare(b.badge_number.toLowerCase());
+            let comparison = 0;
+
+            if (sortColumn === SORT_COLUMNS.BADGE_NUMBER) {
+                comparison = a.badge_number.toLowerCase().localeCompare(b.badge_number.toLowerCase());
+            } else if (sortColumn === SORT_COLUMNS.CREATED_AT) {
+                const dateA = new Date(a.created_at);
+                const dateB = new Date(b.created_at);
+                comparison = dateA - dateB;
+            }
+
             return sortOrder === SORT_OPTIONS.ASC ? comparison : -comparison;
         });
-    }, [badges, sortOrder]);
+    }, [badges, sortColumn, sortOrder]);
 };
 
 // Component for status display with improved accessibility
@@ -140,15 +154,15 @@ const BadgeActions = ({ badge, onEdit, onDelete, onView }) => {
             >
                 <Edit className="h-4 w-4" />
             </Button>
-            <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleDelete}
-                className="text-red-600 transition-colors duration-200 hover:bg-red-50 hover:text-red-800"
-                aria-label={`Delete badge ${badge.badge_number}`}
-            >
-                <Trash2 className="h-4 w-4" />
-            </Button>
+            {/*<Button*/}
+            {/*    variant="ghost"*/}
+            {/*    size="sm"*/}
+            {/*    onClick={handleDelete}*/}
+            {/*    className="text-red-600 transition-colors duration-200 hover:bg-red-50 hover:text-red-800"*/}
+            {/*    aria-label={`Delete badge ${badge.badge_number}`}*/}
+            {/*>*/}
+            {/*    <Trash2 className="h-4 w-4" />*/}
+            {/*</Button>*/}
         </div>
     );
 };
@@ -185,6 +199,7 @@ const EmptyState = ({ hasSearchQuery, onClearSearch, onAddBadge }) => (
 export default function BadgesTable({ badges = [] }) {
     // State management
     const [searchInput, setSearchInput] = useState('');
+    const [sortColumn, setSortColumn] = useState(SORT_COLUMNS.BADGE_NUMBER);
     const [sortOrder, setSortOrder] = useState(SORT_OPTIONS.ASC);
     const [selectedBadge, setSelectedBadge] = useState(null);
     const [assignedDialogOpen, setAssignedDialogOpen] = useState(false);
@@ -193,11 +208,18 @@ export default function BadgesTable({ badges = [] }) {
 
     // Apply filtering and sorting
     const filteredBadges = useBadgeFiltering(badges, searchInput);
-    const sortedBadges = useBadgeSorting(filteredBadges, sortOrder);
+    const sortedBadges = useBadgeSorting(filteredBadges, sortColumn, sortOrder);
 
     // Event handlers
-    const handleSort = () => {
-        setSortOrder((prev) => (prev === SORT_OPTIONS.ASC ? SORT_OPTIONS.DESC : SORT_OPTIONS.ASC));
+    const handleSort = (column) => {
+        if (sortColumn === column) {
+            // Toggle sort order if clicking the same column
+            setSortOrder((prev) => (prev === SORT_OPTIONS.ASC ? SORT_OPTIONS.DESC : SORT_OPTIONS.ASC));
+        } else {
+            // Set new column and default to ASC
+            setSortColumn(column);
+            setSortOrder(SORT_OPTIONS.ASC);
+        }
     };
 
     const handleAssignedDialog = (badge) => {
@@ -275,16 +297,27 @@ export default function BadgesTable({ badges = [] }) {
                                             variant="ghost"
                                             size="sm"
                                             className="-ml-2 flex items-center gap-1 text-gray-800 hover:bg-gray-100 hover:text-gray-900"
-                                            onClick={handleSort}
-                                            aria-label={`Sort by badge number ${sortOrder === SORT_OPTIONS.ASC ? 'descending' : 'ascending'}`}
+                                            onClick={() => handleSort(SORT_COLUMNS.BADGE_NUMBER)}
+                                            aria-label={`Sort by badge number ${sortColumn === SORT_COLUMNS.BADGE_NUMBER && sortOrder === SORT_OPTIONS.ASC ? 'descending' : 'ascending'}`}
                                         >
                                             Badge Number
-                                            <ArrowUpDown className="h-4 w-4" />
+                                            <ArrowUpDown className={`h-4 w-4 ${sortColumn === SORT_COLUMNS.BADGE_NUMBER ? 'text-blue-600' : ''}`} />
                                         </Button>
                                     </TableHead>
                                     <TableHead className="text-sm font-semibold text-gray-800">Status</TableHead>
                                     <TableHead className="text-sm font-semibold text-gray-800">Location</TableHead>
-                                    <TableHead className="text-sm font-semibold text-gray-800">Created</TableHead>
+                                    <TableHead className="text-sm font-semibold text-gray-800">
+                                        <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className="-ml-2 flex items-center gap-1 text-gray-800 hover:bg-gray-100 hover:text-gray-900"
+                                            onClick={() => handleSort(SORT_COLUMNS.CREATED_AT)}
+                                            aria-label={`Sort by created date ${sortColumn === SORT_COLUMNS.CREATED_AT && sortOrder === SORT_OPTIONS.ASC ? 'descending' : 'ascending'}`}
+                                        >
+                                            Created
+                                            <ArrowUpDown className={`h-4 w-4 ${sortColumn === SORT_COLUMNS.CREATED_AT ? 'text-blue-600' : ''}`} />
+                                        </Button>
+                                    </TableHead>
                                     <TableHead className="text-sm font-semibold text-gray-800">Actions</TableHead>
                                 </TableRow>
                             </TableHeader>

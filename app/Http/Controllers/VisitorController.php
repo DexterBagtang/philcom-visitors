@@ -138,18 +138,32 @@ class VisitorController {
             'company' => 'nullable|string|max:255',
             'person_to_visit' => 'required|string|max:255',
             'visit_purpose' => 'required|string|max:1000',
+            'visit_purpose_other' => 'required_if:visit_purpose,Others|string|max:255|nullable',
             'visitor_type' => 'required|string|max:255',
+            'visitor_type_other' => 'required_if:visitor_type,Other|string|max:255|nullable',
         ]);
 
         try {
+            // Replace "Others" with custom text if provided
+            $visitPurpose = $validated['visit_purpose'];
+            if ($visitPurpose === 'Others' && isset($validated['visit_purpose_other']) && !empty(trim($validated['visit_purpose_other']))) {
+                $visitPurpose = $validated['visit_purpose_other'];
+            }
+
+            // Replace "Other" with custom text if provided
+            $visitorType = $validated['visitor_type'];
+            if ($visitorType === 'Other' && isset($validated['visitor_type_other']) && !empty(trim($validated['visitor_type_other']))) {
+                $visitorType = $validated['visitor_type_other'];
+            }
+
             // Always create a new visitor record for check-in
             $visitor = Visitor::create([
                 'first_name' => $validated['first_name'],
                 'last_name' => $validated['last_name'],
                 'company' => $validated['company'] ?? null,
                 'person_to_visit' => $validated['person_to_visit'],
-                'visit_purpose' => $validated['visit_purpose'],
-                'type' => $validated['visitor_type'],
+                'visit_purpose' => $visitPurpose,
+                'type' => $visitorType,
             ]);
 
             // Create a visit record
