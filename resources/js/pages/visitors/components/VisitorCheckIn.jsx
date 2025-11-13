@@ -9,6 +9,21 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 import { CheckCircle2, Loader2, User, Building2, RotateCcw, UserPlus, Clock } from "lucide-react";
 import { Separator } from '@/components/ui/separator.js';
 
+/**
+ * Capitalizes the first letter of each word without changing the rest
+ * Example: "john doe" -> "John Doe", "IBM" -> "IBM", "mcdonald" -> "Mcdonald"
+ */
+const toTitleCase = (text) => {
+    if (!text) return text;
+    return text
+        .split(' ')
+        .map(word => {
+            if (!word) return word;
+            return word.charAt(0).toUpperCase() + word.slice(1);
+        })
+        .join(' ');
+};
+
 const VisitorCheckIn = () => {
     const { flash } = usePage().props;
     const [submitted, setSubmitted] = useState(false);
@@ -262,7 +277,7 @@ const VisitorCheckIn = () => {
                                     <Label>First Name  <RequiredMark /></Label>
                                     <Input
                                         value={data.first_name}
-                                        onChange={(e) => setData('first_name', e.target.value)}
+                                        onChange={(e) => setData('first_name', toTitleCase(e.target.value))}
                                         disabled={processing}
                                         placeholder="Enter First Name"
                                     />
@@ -277,7 +292,7 @@ const VisitorCheckIn = () => {
                                     <Label>Last Name <RequiredMark /></Label>
                                     <Input
                                         value={data.last_name}
-                                        onChange={(e) => setData('last_name', e.target.value)}
+                                        onChange={(e) => setData('last_name', toTitleCase(e.target.value))}
                                         disabled={processing}
                                         placeholder="Enter Last Name"
                                     />
@@ -293,7 +308,7 @@ const VisitorCheckIn = () => {
                                     <Label>Company/Organization <RequiredMark /></Label>
                                     <Input
                                         value={data.company}
-                                        onChange={(e) => setData('company', e.target.value)}
+                                        onChange={(e) => setData('company', toTitleCase(e.target.value))}
                                         disabled={processing}
                                         placeholder="Enter Company/Organization"
                                     />
@@ -343,7 +358,7 @@ const VisitorCheckIn = () => {
                                         <Label>Specify Visitor Type <RequiredMark /></Label>
                                         <Input
                                             value={data.visitor_type_other}
-                                            onChange={(e) => setData('visitor_type_other', e.target.value)}
+                                            onChange={(e) => setData('visitor_type_other', toTitleCase(e.target.value))}
                                             disabled={processing}
                                             placeholder="Enter custom visitor type"
                                         />
@@ -369,7 +384,7 @@ const VisitorCheckIn = () => {
                                 <Label>Person to Visit <RequiredMark /></Label>
                                 <Input
                                     value={data.person_to_visit}
-                                    onChange={(e) => setData('person_to_visit', e.target.value)}
+                                    onChange={(e) => setData('person_to_visit', toTitleCase(e.target.value))}
                                     disabled={processing}
                                     placeholder="Enter Person to visit"
                                 />
@@ -419,7 +434,7 @@ const VisitorCheckIn = () => {
                                     <Label>Specify Purpose <RequiredMark /></Label>
                                     <Input
                                         value={data.visit_purpose_other}
-                                        onChange={(e) => setData('visit_purpose_other', e.target.value)}
+                                        onChange={(e) => setData('visit_purpose_other', toTitleCase(e.target.value))}
                                         disabled={processing}
                                         placeholder="Enter custom purpose"
                                     />
