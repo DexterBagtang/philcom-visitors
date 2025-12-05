@@ -35,4 +35,10 @@ return [
         ],
     ],
 
+    'dtr' => [
+        'base_url' => env('DTR_API_BASE_URL', 'http://192.168.235.83:8081'),
+        'token' => env('DTR_API_TOKEN'),
+        'timeout' => env('DTR_API_TIMEOUT', 10),
+    ],
+
 ];

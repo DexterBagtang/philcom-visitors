@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\BadgeController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DtrController;
 use App\Http\Controllers\ExportController;
 use App\Http\Controllers\VisitController;
 use App\Http\Controllers\VisitorController;
@@ -37,6 +38,12 @@ Route::prefix('visitor')->group(function () {
 
 // Visit management routes
 Route::middleware(['auth'])->group(function () {
+    // DTR API Integration routes
+    Route::get('/api/dtr/employees/search', [DtrController::class, 'searchEmployees'])
+        ->name('dtr.employees.search');
+    Route::get('/api/dtr/employees/{id}', [DtrController::class, 'getEmployee'])
+        ->name('dtr.employees.show');
+
     // Validation routes
     Route::post('/visits/{visit}/validate', [VisitController::class, 'validate'])
         ->name('visits.validate');

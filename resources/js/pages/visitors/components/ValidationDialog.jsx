@@ -6,10 +6,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { Switch } from '@/components/ui/switch';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { cn } from '@/lib/utils';
 import { router } from '@inertiajs/react';
-import { AlertCircle, Building, Check, Clock, FileText, IdCard, Loader, User, Grid3x3, X, Shield, Calendar, Target } from 'lucide-react';
-import { useState } from 'react';
+import { AlertCircle, Building, Check, Clock, FileText, IdCard, Loader, User, Grid3x3, X, Shield, Calendar, Target, Bell, Search, Mail } from 'lucide-react';
+import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 
 export default function ValidationDialog({ isOpen, onClose, visitor, visit, onSuccess, availableBadges = [] }) {
@@ -24,6 +26,15 @@ export default function ValidationDialog({ isOpen, onClose, visitor, visit, onSu
     const [badgeInput, setBadgeInput] = useState('');
     const [showSuggestions, setShowSuggestions] = useState(false);
     const [showBadgePanel, setShowBadgePanel] = useState(false);
+
+    // Notification state
+    const [notifyEmployee, setNotifyEmployee] = useState(false);
+    const [employeeSearchTerm, setEmployeeSearchTerm] = useState('');
+    const [employeeSearchResults, setEmployeeSearchResults] = useState([]);
+    const [selectedEmployee, setSelectedEmployee] = useState(null);
+    const [isSearchingEmployees, setIsSearchingEmployees] = useState(false);
+    const [employeeSearchError, setEmployeeSearchError] = useState(null);
+    const [showManualSearch, setShowManualSearch] = useState(false);
 
     const idTypes = ['National ID', 'Passport', "Driver's License", 'Company ID', 'Student ID', 'Other'];
 
@@ -69,6 +80,67 @@ export default function ValidationDialog({ isOpen, onClose, visitor, visit, onSu
 
     const selectedBadge = availableBadges.find((badge) => badge.id.toString() === formData.selected_badge_id);
 
+    // Employee search functions
+    const searchEmployees = async (searchTerm) => {
+        if (!searchTerm || searchTerm.trim().length === 0) {
+            return;
+        }
+
+        setIsSearchingEmployees(true);
+        setEmployeeSearchError(null);
+
+        try {
+            const response = await fetch(`/api/dtr/employees/search?q=${encodeURIComponent(searchTerm)}`);
+            const data = await response.json();
+
+            if (data.success && data.data) {
+                setEmployeeSearchResults(data.data);
+                if (data.data.length === 0) {
+                    setEmployeeSearchError('No employees found. Try a different search term.');
+                    setShowManualSearch(true);
+                }
+            } else {
+                setEmployeeSearchError('Failed to search employees. Please try again.');
+                setEmployeeSearchResults([]);
+            }
+        } catch (error) {
+            console.error('Employee search error:', error);
+            setEmployeeSearchError('Failed to connect to employee database. You can still validate without notification.');
+            setEmployeeSearchResults([]);
+        } finally {
+            setIsSearchingEmployees(false);
+        }
+    };
+
+    const handleNotifyToggle = (checked) => {
+        setNotifyEmployee(checked);
+        setSelectedEmployee(null);
+        setEmployeeSearchError(null);
+
+        if (checked && visitor?.person_to_visit) {
+            // Auto-search using person_to_visit field
+            searchEmployees(visitor.person_to_visit);
+        } else {
+            setEmployeeSearchResults([]);
+            setEmployeeSearchTerm('');
+            setShowManualSearch(false);
+        }
+    };
+
+    const handleManualSearch = () => {
+        if (employeeSearchTerm.trim()) {
+            searchEmployees(employeeSearchTerm);
+        }
+    };
+
+    const handleEmployeeSelect = (employeeId) => {
+        const employee = employeeSearchResults.find(emp => emp.id.toString() === employeeId.toString());
+        setSelectedEmployee(employee);
+        if (errors.employee_notification) {
+            setErrors((prev) => ({ ...prev, employee_notification: '' }));
+        }
+    };
+
     const validateForm = () => {
         const newErrors = {};
 
@@ -78,6 +150,10 @@ export default function ValidationDialog({ isOpen, onClose, visitor, visit, onSu
 
         if (!formData.selected_badge_id) {
             newErrors.selected_badge_id = 'Please select a badge to assign';
+        }
+
+        if (notifyEmployee && !selectedEmployee) {
+            newErrors.employee_notification = 'Please select an employee to notify';
         }
 
         setErrors(newErrors);
@@ -97,6 +173,12 @@ export default function ValidationDialog({ isOpen, onClose, visitor, visit, onSu
                 {
                     ...formData,
                     validated_by: window.auth?.user?.name || 'Staff',
+                    // Notification data
+                    notify_employee: notifyEmployee,
+                    notified_employee_id: selectedEmployee?.id,
+                    notified_employee_name: selectedEmployee?.full_name,
+                    notified_employee_email: selectedEmployee?.email,
+                    notified_employee_department: selectedEmployee?.department,
                 },
                 {
                     preserveState: true,
@@ -193,6 +275,13 @@ export default function ValidationDialog({ isOpen, onClose, visitor, visit, onSu
         setBadgeInput('');
         setShowSuggestions(false);
         setShowBadgePanel(false);
+        // Reset notification state
+        setNotifyEmployee(false);
+        setSelectedEmployee(null);
+        setEmployeeSearchResults([]);
+        setEmployeeSearchTerm('');
+        setEmployeeSearchError(null);
+        setShowManualSearch(false);
     };
 
     const handleClose = () => {
@@ -563,6 +652,158 @@ export default function ValidationDialog({ isOpen, onClose, visitor, visit, onSu
                                 <AlertCircle className="h-4 w-4" />
                                 No badges found matching "{badgeInput}". Click the grid icon to browse all badges.
                             </p>
+                        )}
+                    </div>
+
+                    {/* Employee Notification Section */}
+                    <div className="space-y-4 rounded-xl border border-blue-200 bg-gradient-to-br from-blue-50/50 to-indigo-50/30 p-5">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <div className="rounded-md bg-blue-100 p-1.5">
+                                    <Bell className="h-4 w-4 text-blue-600" />
+                                </div>
+                                <h3 className="text-base font-semibold text-gray-800">Employee Notification</h3>
+                            </div>
+                            <div className="flex items-center gap-2">
+                                <Label htmlFor="notify-toggle" className="text-sm text-gray-600 cursor-pointer">
+                                    Notify person being visited?
+                                </Label>
+                                <Switch
+                                    id="notify-toggle"
+                                    checked={notifyEmployee}
+                                    onCheckedChange={handleNotifyToggle}
+                                />
+                            </div>
+                        </div>
+
+                        {notifyEmployee && (
+                            <div className="space-y-4 animate-in fade-in slide-in-from-top-2">
+                                {/* Loading state */}
+                                {isSearchingEmployees && (
+                                    <div className="flex items-center justify-center gap-2 rounded-lg bg-blue-50 p-4">
+                                        <Loader className="h-4 w-4 animate-spin text-blue-600" />
+                                        <span className="text-sm text-blue-700">Searching for employees...</span>
+                                    </div>
+                                )}
+
+                                {/* Employee search results (Radio buttons) */}
+                                {!isSearchingEmployees && employeeSearchResults.length > 0 && (
+                                    <div className="space-y-3">
+                                        <Label className="text-sm font-medium">Select Employee to Notify *</Label>
+                                        <RadioGroup
+                                            value={selectedEmployee?.id?.toString()}
+                                            onValueChange={handleEmployeeSelect}
+                                            className="space-y-2"
+                                        >
+                                            {employeeSearchResults.map((emp) => (
+                                                <div key={emp.id} className={cn(
+                                                    "flex items-start gap-3 rounded-lg border-2 p-3 transition-all cursor-pointer hover:bg-blue-50",
+                                                    selectedEmployee?.id === emp.id
+                                                        ? 'border-blue-500 bg-blue-50'
+                                                        : 'border-gray-200 bg-white'
+                                                )}>
+                                                    <RadioGroupItem value={emp.id.toString()} id={`emp-${emp.id}`} className="mt-0.5" />
+                                                    <Label htmlFor={`emp-${emp.id}`} className="flex-1 cursor-pointer">
+                                                        <div>
+                                                            <p className="text-sm font-semibold text-gray-900">{emp.full_name}</p>
+                                                            <div className="flex items-center gap-2 mt-1">
+                                                                <Badge variant="outline" className="text-xs">
+                                                                    {emp.department}
+                                                                </Badge>
+                                                                <span className="flex items-center gap-1 text-xs text-gray-500">
+                                                                    <Mail className="h-3 w-3" />
+                                                                    {emp.email}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    </Label>
+                                                </div>
+                                            ))}
+                                        </RadioGroup>
+
+                                        {/* Option to search again */}
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={() => setShowManualSearch(true)}
+                                            className="w-full"
+                                        >
+                                            <Search className="h-3 w-3 mr-2" />
+                                            Search for different employee
+                                        </Button>
+                                    </div>
+                                )}
+
+                                {/* Manual search input */}
+                                {!isSearchingEmployees && (employeeSearchResults.length === 0 || showManualSearch) && (
+                                    <div className="space-y-3">
+                                        <Label htmlFor="employee-search" className="text-sm font-medium">
+                                            Search Employee by Name
+                                        </Label>
+                                        <div className="flex gap-2">
+                                            <Input
+                                                id="employee-search"
+                                                placeholder="Type employee name..."
+                                                value={employeeSearchTerm}
+                                                onChange={(e) => setEmployeeSearchTerm(e.target.value)}
+                                                onKeyDown={(e) => {
+                                                    if (e.key === 'Enter') {
+                                                        e.preventDefault();
+                                                        handleManualSearch();
+                                                    }
+                                                }}
+                                                className="flex-1"
+                                            />
+                                            <Button
+                                                type="button"
+                                                onClick={handleManualSearch}
+                                                disabled={!employeeSearchTerm.trim()}
+                                                className="gap-2"
+                                            >
+                                                <Search className="h-4 w-4" />
+                                                Search
+                                            </Button>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Selected employee display */}
+                                {selectedEmployee && (
+                                    <div className="rounded-lg border-2 border-green-300 bg-gradient-to-r from-green-50 to-emerald-50 p-3 animate-in fade-in slide-in-from-top-2">
+                                        <div className="flex items-center gap-2.5">
+                                            <div className="rounded-full bg-green-500 p-1">
+                                                <Check className="h-3.5 w-3.5 text-white" />
+                                            </div>
+                                            <Mail className="h-4.5 w-4.5 text-green-600" />
+                                            <div className="flex-1">
+                                                <p className="text-sm font-semibold text-green-800">
+                                                    {selectedEmployee.full_name} will be notified
+                                                </p>
+                                                <p className="text-xs text-green-700">
+                                                    Email will be sent to: {selectedEmployee.email}
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Error display */}
+                                {employeeSearchError && (
+                                    <div className="flex items-center gap-2 rounded-md bg-amber-50 p-3 text-sm text-amber-700">
+                                        <AlertCircle className="h-4 w-4 flex-shrink-0" />
+                                        <span>{employeeSearchError}</span>
+                                    </div>
+                                )}
+
+                                {/* Validation error */}
+                                {errors.employee_notification && (
+                                    <p className="flex items-center gap-1.5 rounded-md bg-red-50 p-2.5 text-sm font-medium text-red-700 animate-in fade-in slide-in-from-top-1">
+                                        <AlertCircle className="h-4 w-4" />
+                                        {errors.employee_notification}
+                                    </p>
+                                )}
+                            </div>
                         )}
                     </div>
 

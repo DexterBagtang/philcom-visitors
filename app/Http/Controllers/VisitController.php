@@ -6,9 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Models\Visit;
 use App\Models\VisitorBadge;
 use App\Models\BadgeAssignment;
+use App\Jobs\SendVisitorNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
 class VisitController extends Controller
@@ -25,6 +27,12 @@ class VisitController extends Controller
                 'validation_notes' => 'nullable|string|max:1000',
                 'selected_badge_id' => 'required|exists:visitor_badges,id',
                 'validated_by' => 'required|string|max:100',
+                // Notification fields
+                'notify_employee' => 'boolean',
+                'notified_employee_id' => 'nullable|integer',
+                'notified_employee_name' => 'nullable|string|max:255',
+                'notified_employee_email' => 'nullable|email|max:255',
+                'notified_employee_department' => 'nullable|string|max:255',
             ]);
 
             // Check if visit can be validated
@@ -52,6 +60,12 @@ class VisitController extends Controller
                     'validated_at' => now(),
                     'id_type_checked' => $validated['id_type_checked'],
                     'validation_notes' => $validated['validation_notes'],
+                    // Notification fields
+                    'notify_employee' => $validated['notify_employee'] ?? false,
+                    'notified_employee_id' => $validated['notified_employee_id'] ?? null,
+                    'notified_employee_name' => $validated['notified_employee_name'] ?? null,
+                    'notified_employee_email' => $validated['notified_employee_email'] ?? null,
+                    'notified_employee_department' => $validated['notified_employee_department'] ?? null,
                 ]);
 
                 // Update badge status
@@ -67,6 +81,35 @@ class VisitController extends Controller
                     'assigned_at' => now(),
                     'notes' => "Assigned during validation by {$validated['validated_by']}"
                 ]);
+
+                // Dispatch notification job if enabled
+                if (($validated['notify_employee'] ?? false) && !empty($validated['notified_employee_email'])) {
+                    try {
+                        // Dispatch job to queue
+                        SendVisitorNotification::dispatch(
+                            $visit->id,
+                            $validated['notified_employee_email'],
+                            $validated['notified_employee_name']
+                        );
+
+                        Log::info('Visitor notification job dispatched to queue', [
+                            'visit_id' => $visit->id,
+                            'employee_email' => $validated['notified_employee_email'],
+                            'employee_name' => $validated['notified_employee_name']
+                        ]);
+                    } catch (\Exception $e) {
+                        // Don't fail validation if job dispatch fails
+                        Log::error('Failed to dispatch visitor notification job', [
+                            'visit_id' => $visit->id,
+                            'employee_email' => $validated['notified_employee_email'],
+                            'error' => $e->getMessage()
+                        ]);
+
+                        $visit->update([
+                            'notification_error' => 'Failed to queue notification: ' . $e->getMessage()
+                        ]);
+                    }
+                }
 
                 DB::commit();
 
