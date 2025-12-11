@@ -80,6 +80,16 @@ export default function ValidationDialog({ isOpen, onClose, visitor, visit, onSu
 
     const selectedBadge = availableBadges.find((badge) => badge.id.toString() === formData.selected_badge_id);
 
+    // Helper function to extract last word from name (typically the last name)
+    const extractLastName = (name) => {
+        if (!name) return '';
+
+        const trimmed = name.trim();
+        const words = trimmed.split(/\s+/); // Split by whitespace
+
+        return words[words.length - 1]; // Return the last word
+    };
+
     // Employee search functions
     const searchEmployees = async (searchTerm) => {
         if (!searchTerm || searchTerm.trim().length === 0) {
@@ -118,8 +128,9 @@ export default function ValidationDialog({ isOpen, onClose, visitor, visit, onSu
         setEmployeeSearchError(null);
 
         if (checked && visitor?.person_to_visit) {
-            // Auto-search using person_to_visit field
-            searchEmployees(visitor.person_to_visit);
+            // Auto-search using the last word from person_to_visit field (typically the last name)
+            const lastName = extractLastName(visitor.person_to_visit);
+            searchEmployees(lastName);
         } else {
             setEmployeeSearchResults([]);
             setEmployeeSearchTerm('');
