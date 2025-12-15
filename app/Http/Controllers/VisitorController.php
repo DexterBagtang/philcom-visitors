@@ -156,6 +156,29 @@ class VisitorController {
                 $visitorType = $validated['visitor_type_other'];
             }
 
+            // Check for duplicate submission within the last 2 minutes
+            $recentDuplicate = Visitor::where('first_name', $validated['first_name'])
+                ->where('last_name', $validated['last_name'])
+                ->where('company', $validated['company'] ?? null)
+                ->where('person_to_visit', $validated['person_to_visit'])
+                ->whereHas('visits', function($query) {
+                    $query->where('created_at', '>=', now()->subMinutes(2));
+                })
+                ->first();
+
+            if ($recentDuplicate) {
+                \Log::warning('Duplicate check-in attempt detected', [
+                    'first_name' => $validated['first_name'],
+                    'last_name' => $validated['last_name'],
+                    'company' => $validated['company'] ?? null,
+                    'ip_address' => $request->ip(),
+                ]);
+
+                return redirect()->back()
+                    ->withErrors(['duplicate' => 'You have already checked in recently. Please proceed to the reception desk.'])
+                    ->withInput();
+            }
+
             // Always create a new visitor record for check-in
             $visitor = Visitor::create([
                 'first_name' => $validated['first_name'],

@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
-import { CheckCircle2, Loader2, User, Building2, RotateCcw, UserPlus, Clock } from "lucide-react";
+import { CheckCircle2, Loader2, User, Building2, UserPlus } from "lucide-react";
 import { Separator } from '@/components/ui/separator.js';
 
 /**
@@ -32,6 +32,7 @@ const VisitorCheckIn = () => {
     const [clientErrors, setClientErrors] = useState({});
     const [countdown, setCountdown] = useState(60); // 60 seconds countdown
     const [isCountdownActive, setIsCountdownActive] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false); // Prevent double-click
 
     const { data, setData, post, processing, errors, reset } = useForm({
         first_name: '',
@@ -133,8 +134,14 @@ const VisitorCheckIn = () => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
+
+        // Prevent double submission
+        if (isSubmitting || processing) return;
+
         if (!validateForm()) return;
 
+        // Set submitting flag immediately to prevent double-clicks
+        setIsSubmitting(true);
 
         post('/visitor/check-in', {
             onSuccess: () => {
@@ -143,6 +150,11 @@ const VisitorCheckIn = () => {
                 setIsOtherType(false);
                 setIsOtherPurpose(false);
                 setClientErrors({});
+                setIsSubmitting(false);
+            },
+            onError: () => {
+                // Reset submitting state on error so user can retry
+                setIsSubmitting(false);
             }
         });
     };
@@ -154,6 +166,7 @@ const VisitorCheckIn = () => {
         setIsOtherType(false);
         setIsOtherPurpose(false);
         setClientErrors({});
+        setIsSubmitting(false); // Reset submitting state
 
         // Explicitly reset all form data
         setData({
@@ -196,24 +209,15 @@ const VisitorCheckIn = () => {
 
 
 
-                        {/* Action Buttons */}
-                        <div className="flex flex-col sm:flex-row gap-3 w-full">
+                        {/* Action Button */}
+                        <div className="w-full">
                             <Button
                                 onClick={handleRegisterAnother}
                                 variant="default"
-                                className="flex-1"
+                                className="w-full"
                             >
                                 <UserPlus className="w-4 h-4 mr-2" />
                                 Register Another Visitor
-                            </Button>
-
-                            <Button
-                                onClick={handleReturnToForm}
-                                variant="outline"
-                                className="flex-1"
-                            >
-                                <RotateCcw className="w-4 h-4 mr-2" />
-                                Return to Form
                             </Button>
                         </div>
 
@@ -264,6 +268,14 @@ const VisitorCheckIn = () => {
 
                 <CardContent>
                     <form onSubmit={handleSubmit} className="space-y-6">
+                        {/* Duplicate Error Alert */}
+                        {errors.duplicate && (
+                            <Alert variant="destructive">
+                                <AlertTitle>Already Checked In</AlertTitle>
+                                <AlertDescription>{errors.duplicate}</AlertDescription>
+                            </Alert>
+                        )}
+
                         {/* --- Your Details --- */}
                         <div>
                             <h2 className="text-lg font-semibold flex items-center gap-2 mb-2">
@@ -335,12 +347,12 @@ const VisitorCheckIn = () => {
                                             <SelectValue placeholder="Select visitor type" />
                                         </SelectTrigger>
                                         <SelectContent>
-                                            <SelectItem value="Visitor">Visitor</SelectItem>
-                                            <SelectItem value="Client">Client</SelectItem>
                                             <SelectItem value="Contractor">Contractor</SelectItem>
                                             <SelectItem value="Vendor">Vendor</SelectItem>
-                                            <SelectItem value="Applicant">Applicant</SelectItem>
+                                            <SelectItem value="Visitor">Visitor</SelectItem>
+                                            <SelectItem value="Client">Client</SelectItem>
                                             <SelectItem value="Delivery Personnel">Delivery Personnel</SelectItem>
+                                            <SelectItem value="Applicant">Applicant</SelectItem>
                                             <SelectItem value="Other">Other</SelectItem>
                                         </SelectContent>
 
@@ -411,13 +423,15 @@ const VisitorCheckIn = () => {
                                         <SelectValue placeholder="Select purpose of visit" />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="Meeting">Meeting</SelectItem>
                                         <SelectItem value="Official Business">Official Business</SelectItem>
-                                        <SelectItem value="Delivery">Delivery (Invoice, Receipts, etc.)</SelectItem>
-                                        <SelectItem value="Collection / Payment">Collection / Payment</SelectItem>
+                                        <SelectItem value="Meeting">Meeting</SelectItem>
+                                        <SelectItem value="Delivery">Delivery</SelectItem>
+                                        <SelectItem value="Collection">Collection</SelectItem>
+                                        <SelectItem value="Payment">Payment</SelectItem>
                                         <SelectItem value="Billing">Billing</SelectItem>
                                         <SelectItem value="Submit Documents / Requirements">Submit Documents / Requirements</SelectItem>
                                         <SelectItem value="Interview">Interview</SelectItem>
+                                        <SelectItem value="Repair/Maintenance">Repair/Maintenance</SelectItem>
                                         <SelectItem value="Others">Others</SelectItem>
                                     </SelectContent>
                                 </Select>
@@ -515,9 +529,9 @@ const VisitorCheckIn = () => {
 
 
                         {/* Submit */}
-                        <Button type="submit" className="w-full" disabled={processing || !data.agree}>
-                            {processing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                            {processing ? "Submitting..." : "Submit"}
+                        <Button type="submit" className="w-full" disabled={isSubmitting || processing || !data.agree}>
+                            {(isSubmitting || processing) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                            {(isSubmitting || processing) ? "Submitting..." : "Submit"}
                         </Button>
 
                     </form>

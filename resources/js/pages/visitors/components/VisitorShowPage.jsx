@@ -231,7 +231,7 @@ export default function VisitorShowPage({ visit, from }) {
     };
 
     // Calculate visit duration - but not for denied visits
-    const visitDuration = visit.status === 'denied' 
+    const visitDuration = visit.status === 'denied'
         ? { duration: 'N/A', isOngoing: false, totalMinutes: 0 }
         : calculateVisitDuration(visit.check_in_time, visit.check_out_time);
 
@@ -361,9 +361,9 @@ export default function VisitorShowPage({ visit, from }) {
                                                 <div className="min-w-0">
                                                     <p className="text-sm font-medium">Validated by {visit.validated_by}</p>
                                                     <p className="text-xs text-slate-500">
-                                                        {visit.id_type_checked && visit.id_number_checked
-                                                            ? `${visit.id_type_checked}: ${visit.id_number_checked}`
-                                                            : 'ID verified'
+                                                        {visit.id_type_checked
+                                                            ? `${visit.id_type_checked}`
+                                                            : `ID verified `
                                                         }
                                                     </p>
                                                 </div>
