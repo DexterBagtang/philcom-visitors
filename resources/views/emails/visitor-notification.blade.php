@@ -3,7 +3,7 @@
 
 Hello {{ $employeeName }},
 
-You have a visitor waiting for you at the lobby.
+A visitor has checked in and is now in the lobby.
 
 <x-mail::panel>
 **Visitor Details:**
@@ -15,7 +15,7 @@ You have a visitor waiting for you at the lobby.
 - **Badge Number:** {{ $badgeNumber }}
 </x-mail::panel>
 
-Please proceed to the lobby to meet your visitor.
+This is to inform you of your visitor's arrival.
 
 Thanks,<br>
 {{ config('app.name') }}

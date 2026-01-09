@@ -28,7 +28,7 @@ export default function ValidationDialog({ isOpen, onClose, visitor, visit, onSu
     const [showBadgePanel, setShowBadgePanel] = useState(false);
 
     // Notification state
-    const [notifyEmployee, setNotifyEmployee] = useState(false);
+    const [notifyEmployee, setNotifyEmployee] = useState(true);
     const [employeeSearchTerm, setEmployeeSearchTerm] = useState('');
     const [employeeSearchResults, setEmployeeSearchResults] = useState([]);
     const [selectedEmployee, setSelectedEmployee] = useState(null);
@@ -37,6 +37,14 @@ export default function ValidationDialog({ isOpen, onClose, visitor, visit, onSu
     const [showManualSearch, setShowManualSearch] = useState(false);
 
     const idTypes = ['National ID', 'Passport', "Driver's License", 'Company ID', 'Student ID', 'Other'];
+
+    // Auto-search for employee when dialog opens with notification enabled
+    useEffect(() => {
+        if (isOpen && notifyEmployee && visitor?.person_to_visit) {
+            const lastName = extractLastName(visitor.person_to_visit);
+            searchEmployees(lastName);
+        }
+    }, [isOpen]);
 
     const handleInputChange = (field, value) => {
         setFormData((prev) => ({
