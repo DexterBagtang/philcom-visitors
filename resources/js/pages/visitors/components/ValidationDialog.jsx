@@ -28,7 +28,7 @@ export default function ValidationDialog({ isOpen, onClose, visitor, visit, onSu
     const [showBadgePanel, setShowBadgePanel] = useState(false);
 
     // Notification state
-    const [notifyEmployee, setNotifyEmployee] = useState(false);
+    const [notifyEmployee, setNotifyEmployee] = useState(true);
     const [employeeSearchTerm, setEmployeeSearchTerm] = useState('');
     const [employeeSearchResults, setEmployeeSearchResults] = useState([]);
     const [selectedEmployee, setSelectedEmployee] = useState(null);
