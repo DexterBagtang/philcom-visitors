@@ -25,6 +25,7 @@ class SyncEmployeesController extends Controller
             'employees.*.id' => 'required|integer',
             'employees.*.name' => 'required|string',
             'employees.*.email' => 'nullable|string',
+            'employees.*.department' => 'nullable|string',
         ]);
 
         if ($validator->fails()) {
@@ -40,6 +41,7 @@ class SyncEmployeesController extends Controller
                 [
                     'full_name' => $employeeData['name'],
                     'email' => $employeeData['email'] ?? null,
+                    'department' => $employeeData['department'] ?? null,
                     'is_active' => true,
                     'last_synced_at' => now(),
                 ]
