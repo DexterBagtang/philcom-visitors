@@ -294,8 +294,8 @@ export default function ValidationDialog({ isOpen, onClose, visitor, visit, onSu
         setBadgeInput('');
         setShowSuggestions(false);
         setShowBadgePanel(false);
-        // Reset notification state
-        setNotifyEmployee(false);
+        // Reset notification state - keep it enabled by default
+        setNotifyEmployee(true);
         setSelectedEmployee(null);
         setEmployeeSearchResults([]);
         setEmployeeSearchTerm('');
@@ -691,6 +691,7 @@ export default function ValidationDialog({ isOpen, onClose, visitor, visit, onSu
                                     id="notify-toggle"
                                     checked={notifyEmployee}
                                     onCheckedChange={handleNotifyToggle}
+                                    disabled={true}
                                 />
                             </div>
                         </div>
