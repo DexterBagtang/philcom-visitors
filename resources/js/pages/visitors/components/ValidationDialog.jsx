@@ -41,8 +41,10 @@ export default function ValidationDialog({ isOpen, onClose, visitor, visit, onSu
     // Auto-search for employee when dialog opens with notification enabled
     useEffect(() => {
         if (isOpen && notifyEmployee && visitor?.person_to_visit) {
-            const lastName = extractLastName(visitor.person_to_visit);
-            searchEmployees(lastName);
+            const searchTerms = extractSearchTerms(visitor.person_to_visit);
+            if (searchTerms) {
+                searchEmployees(searchTerms);
+            }
         }
     }, [isOpen]);
 
@@ -88,14 +90,35 @@ export default function ValidationDialog({ isOpen, onClose, visitor, visit, onSu
 
     const selectedBadge = availableBadges.find((badge) => badge.id.toString() === formData.selected_badge_id);
 
-    // Helper function to extract last word from name (typically the last name)
-    const extractLastName = (name) => {
+    // Sanitize person name by removing honorific titles
+    const sanitizePersonName = (name) => {
         if (!name) return '';
 
-        const trimmed = name.trim();
-        const words = trimmed.split(/\s+/); // Split by whitespace
+        const titles = [
+            'sir', 'mr', 'mr.', 'mister',
+            'mrs', 'mrs.', 'ms', 'ms.', 'miss',
+            "ma'am", 'maam', 'madam', 'madame',
+            'dr', 'dr.', 'doctor',
+            'prof', 'prof.', 'professor',
+            'atty', 'atty.', 'attorney',
+            'engr', 'engr.', 'engineer'
+        ];
 
-        return words[words.length - 1]; // Return the last word
+        let sanitized = name.trim().replace(/\s+/g, ' ');
+        const titlePattern = new RegExp('^(' + titles.join('|') + ')\\s+', 'i');
+        sanitized = sanitized.replace(titlePattern, '');
+
+        return sanitized.trim();
+    };
+
+    // Extract search terms from person name (sanitize and split into words)
+    const extractSearchTerms = (name) => {
+        if (!name) return '';
+
+        const sanitized = sanitizePersonName(name);
+        const words = sanitized.split(/\s+/).filter(word => word.length >= 2);
+
+        return words.join(' '); // Send all words to backend for comprehensive search
     };
 
     // Employee search functions
@@ -136,9 +159,11 @@ export default function ValidationDialog({ isOpen, onClose, visitor, visit, onSu
         setEmployeeSearchError(null);
 
         if (checked && visitor?.person_to_visit) {
-            // Auto-search using the last word from person_to_visit field (typically the last name)
-            const lastName = extractLastName(visitor.person_to_visit);
-            searchEmployees(lastName);
+            // Auto-search using sanitized search terms from person_to_visit field
+            const searchTerms = extractSearchTerms(visitor.person_to_visit);
+            if (searchTerms) {
+                searchEmployees(searchTerms);
+            }
         } else {
             setEmployeeSearchResults([]);
             setEmployeeSearchTerm('');
@@ -148,7 +173,10 @@ export default function ValidationDialog({ isOpen, onClose, visitor, visit, onSu
 
     const handleManualSearch = () => {
         if (employeeSearchTerm.trim()) {
-            searchEmployees(employeeSearchTerm);
+            const sanitizedTerm = extractSearchTerms(employeeSearchTerm);
+            if (sanitizedTerm) {
+                searchEmployees(sanitizedTerm);
+            }
         }
     };
 
