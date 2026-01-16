@@ -16,9 +16,11 @@ import { flexRender, getCoreRowModel, useReactTable } from '@tanstack/react-tabl
 import { format, isAfter, isBefore, isPast, isYesterday, startOfToday } from 'date-fns';
 import {
     Activity,
+    AlertTriangle,
     ArrowUpDown,
     Building2,
     Calendar as CalendarIcon,
+    CheckSquare,
     ChevronLeft,
     ChevronRight,
     Clock,
@@ -35,8 +37,10 @@ import {
     XCircle,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { Checkbox } from '@/components/ui/checkbox';
 const ValidationDialog = lazy(()=> import('./ValidationDialog'));
 const CheckoutDialog = lazy(()=> import('@/pages/visitors/components/CheckoutDialog.jsx'));
+const BulkCheckoutDialog = lazy(()=> import('@/pages/visitors/components/BulkCheckoutDialog.jsx'));
 
 
 export default function VisitorsTableServerSide({ visits = {}, meta = {}, onRefresh }) {
@@ -56,6 +60,8 @@ export default function VisitorsTableServerSide({ visits = {}, meta = {}, onRefr
     const [isLoadingBadges, setIsLoadingBadges] = useState(false);
     const [showCheckoutDialog, setShowCheckoutDialog] = useState(false);
     const [checkoutVisit, setCheckoutVisit] = useState(null);
+    const [selectedVisitIds, setSelectedVisitIds] = useState([]);
+    const [showBulkCheckoutDialog, setShowBulkCheckoutDialog] = useState(false);
 
     // Echo for real-time updates
     useEchoPublic('visits', 'VisitCreated', (event) => {
@@ -63,6 +69,15 @@ export default function VisitorsTableServerSide({ visits = {}, meta = {}, onRefr
         toast.info(`Visitor ${visitorName} checked in`, { position: 'bottom-right' });
         router.reload()
     });
+
+    // Read URL query params on mount
+    useEffect(() => {
+        const urlParams = new URLSearchParams(window.location.search);
+        const quickFilter = urlParams.get('quickFilter');
+        if (quickFilter) {
+            setActiveQuickFilter(quickFilter);
+        }
+    }, []);
 
     // Safe data handling
     const tableData = visits?.data || [];
@@ -148,12 +163,18 @@ export default function VisitorsTableServerSide({ visits = {}, meta = {}, onRefr
             label: 'Denied',
             icon: XCircle,
         },
+        {
+            id: 'overdue',
+            label: 'Overdue',
+            icon: AlertTriangle,
+        },
     ];
 
     // Handle quick filter
     const handleQuickFilter = (filterId) => {
         const newQuickFilter = activeQuickFilter === filterId ? null : filterId;
         setActiveQuickFilter(newQuickFilter);
+        setSelectedVisitIds([]); // Clear selections when filter changes
 
         makeServerRequest({
             quickFilter: newQuickFilter || undefined,
@@ -242,6 +263,31 @@ export default function VisitorsTableServerSide({ visits = {}, meta = {}, onRefr
         }
     };
 
+    // Selection handlers for bulk checkout
+    const ongoingVisits = tableData.filter(v => v.status === 'ongoing');
+    const allOngoingSelected = ongoingVisits.length > 0 && ongoingVisits.every(v => selectedVisitIds.includes(v.id));
+    const someOngoingSelected = ongoingVisits.some(v => selectedVisitIds.includes(v.id));
+
+    const handleSelectAll = (checked) => {
+        if (checked) {
+            setSelectedVisitIds(ongoingVisits.map(v => v.id));
+        } else {
+            setSelectedVisitIds([]);
+        }
+    };
+
+    const handleSelectVisit = (visitId, checked) => {
+        if (checked) {
+            setSelectedVisitIds(prev => [...prev, visitId]);
+        } else {
+            setSelectedVisitIds(prev => prev.filter(id => id !== visitId));
+        }
+    };
+
+    const getSelectedVisits = () => {
+        return tableData.filter(v => selectedVisitIds.includes(v.id));
+    };
+
     // Action handlers
     const handleValidateVisitor = (visit) => {
         setSelectedVisit(visit);
@@ -287,8 +333,45 @@ export default function VisitorsTableServerSide({ visits = {}, meta = {}, onRefr
         },
     };
 
+    // Show checkbox column only when filtering ongoing/overdue visits
+    const showCheckboxColumn = activeQuickFilter === 'ongoing' || activeQuickFilter === 'overdue';
+
     // Table columns
     const columns = [
+        // Conditionally include checkbox column
+        ...(showCheckboxColumn ? [{
+            id: 'select',
+            header: () => (
+                <div className="flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
+                    <Checkbox
+                        checked={allOngoingSelected}
+                        indeterminate={someOngoingSelected && !allOngoingSelected}
+                        onCheckedChange={handleSelectAll}
+                        aria-label="Select all ongoing visits"
+                        disabled={ongoingVisits.length === 0}
+                    />
+                </div>
+            ),
+            cell: ({ row }) => {
+                const visit = row.original;
+                const isOngoing = visit.status === 'ongoing';
+                const isSelected = selectedVisitIds.includes(visit.id);
+
+                if (!isOngoing) {
+                    return <div className="flex items-center justify-center w-4" />;
+                }
+
+                return (
+                    <div className="flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
+                        <Checkbox
+                            checked={isSelected}
+                            onCheckedChange={(checked) => handleSelectVisit(visit.id, checked)}
+                            aria-label={`Select ${visit.visitor?.name}`}
+                        />
+                    </div>
+                );
+            },
+        }] : []),
         {
             accessorFn: (row) => row.visitor?.name,
             id: 'name',
@@ -670,6 +753,18 @@ export default function VisitorsTableServerSide({ visits = {}, meta = {}, onRefr
                                         </PopoverContent>
                                     </Popover>
 
+                                    {selectedVisitIds.length > 0 && (
+                                        <Button
+                                            onClick={() => setShowBulkCheckoutDialog(true)}
+                                            variant="destructive"
+                                            size="sm"
+                                            className="flex items-center gap-2"
+                                        >
+                                            <CheckSquare className="h-4 w-4" />
+                                            Bulk Checkout ({selectedVisitIds.length})
+                                        </Button>
+                                    )}
+
                                     <Button
                                         onClick={onRefresh}
                                         variant="ghost"
@@ -932,6 +1027,20 @@ export default function VisitorsTableServerSide({ visits = {}, meta = {}, onRefr
                     }}
                     visit={checkoutVisit}
                     onSuccess={() => {
+                        onRefresh?.();
+                    }}
+                />
+            </Suspense>
+
+            <Suspense fallback={null}>
+                <BulkCheckoutDialog
+                    isOpen={showBulkCheckoutDialog}
+                    onClose={() => {
+                        setShowBulkCheckoutDialog(false);
+                    }}
+                    selectedVisits={getSelectedVisits()}
+                    onSuccess={() => {
+                        setSelectedVisitIds([]);
                         onRefresh?.();
                     }}
                 />

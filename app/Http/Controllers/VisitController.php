@@ -284,4 +284,88 @@ class VisitController extends Controller
             ]);
         }
     }
+
+    public function bulkCheckout(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'visit_ids' => 'required|array|min:1',
+                'visit_ids.*' => 'exists:visits,id',
+                'notes' => 'nullable|string|max:1000',
+            ]);
+
+            $visitIds = $validated['visit_ids'];
+            $notes = $validated['notes'] ?? 'Bulk checkout - visitor left without formal checkout';
+
+            DB::beginTransaction();
+
+            try {
+                $checkedOutCount = 0;
+                $errors = [];
+
+                foreach ($visitIds as $visitId) {
+                    $visit = Visit::find($visitId);
+
+                    if (!$visit) {
+                        $errors[] = "Visit #{$visitId} not found";
+                        continue;
+                    }
+
+                    if ($visit->status !== 'ongoing') {
+                        $errors[] = "Visit #{$visitId} cannot be checked out (status: {$visit->status})";
+                        continue;
+                    }
+
+                    // Update visit status
+                    $visit->update([
+                        'status' => 'checked_out',
+                        'check_out_time' => now(),
+                        'checkout_type' => 'bulk',
+                    ]);
+
+                    // Return the assigned badge
+                    $badgeAssignment = BadgeAssignment::where('visit_id', $visit->id)
+                        ->whereNull('returned_at')
+                        ->first();
+
+                    if ($badgeAssignment) {
+                        $badgeAssignment->update([
+                            'returned_at' => now(),
+                            'notes' => $badgeAssignment->notes . " | {$notes}"
+                        ]);
+
+                        $badgeAssignment->badge->update([
+                            'status' => 'available',
+                            'location' => 'Front Desk'
+                        ]);
+                    }
+
+                    $checkedOutCount++;
+                }
+
+                DB::commit();
+
+                $message = "{$checkedOutCount} visitor(s) checked out successfully.";
+                if (!empty($errors)) {
+                    $message .= " " . count($errors) . " error(s) occurred.";
+                }
+
+                return back()->with('success', $message);
+
+            } catch (\Exception $e) {
+                DB::rollback();
+                throw $e;
+            }
+
+        } catch (\Exception $e) {
+            Log::error('Bulk checkout failed', [
+                'error' => $e->getMessage(),
+                'visit_ids' => $request->input('visit_ids'),
+            ]);
+
+            return back()->withErrors([
+                'general' => 'An error occurred during bulk checkout: ' . $e->getMessage()
+            ]);
+        }
+    }
 }

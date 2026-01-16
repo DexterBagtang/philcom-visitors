@@ -417,6 +417,10 @@ class VisitorController {
                 case 'denied':
                     $query->where('status', 'denied');
                     break;
+
+                case 'overdue':
+                    $query->overdue();
+                    break;
             }
         }
 

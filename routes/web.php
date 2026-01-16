@@ -58,6 +58,10 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/visits/{visit}/checkout', [VisitController::class, 'checkout'])
         ->name('visits.checkout');
 
+    // Bulk checkout visitors
+    Route::post('/visits/bulk-checkout', [VisitController::class, 'bulkCheckout'])
+        ->name('visits.bulk-checkout');
+
     // Generate visit report
     Route::get('/visits/{visit}/report', [VisitController::class, 'generateReport'])
         ->name('visits.report');

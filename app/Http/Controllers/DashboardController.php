@@ -16,7 +16,7 @@ class DashboardController
                 ->whereDate('check_in_time', today())
                 ->orderByDesc('created_at')
                 ->get(),
+            'overdueCount' => Visit::overdue()->count(),
         ]);
-
     }
 }
