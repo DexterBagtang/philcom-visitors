@@ -8,9 +8,10 @@ import { Input } from '@/components/ui/input';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { Switch } from '@/components/ui/switch';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { cn } from '@/lib/utils';
 import { router } from '@inertiajs/react';
-import { AlertCircle, Building, Check, Clock, FileText, IdCard, Loader, User, Grid3x3, X, Shield, Calendar, Target, Bell, Search, Mail } from 'lucide-react';
+import { AlertCircle, Building, Check, Clock, FileText, IdCard, Loader, User, Grid3x3, X, Shield, Calendar, Target, Bell, Search, Mail, Users } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 
@@ -363,6 +364,21 @@ export default function ValidationDialog({ isOpen, onClose, visitor, visit, onSu
                     <DialogDescription className="text-base">
                         Please verify the visitor's identity and assign a badge to complete the check-in process.
                     </DialogDescription>
+
+                    {/* Group Check-in Alert */}
+                    {visit?.group_id && (
+                        <Alert className="mt-2">
+                            <Users className="h-4 w-4" />
+                            <AlertTitle>
+                                {visit?.is_group_leader ? 'Group Leader' : 'Group Member'}
+                            </AlertTitle>
+                            <AlertDescription>
+                                {visit?.is_group_leader
+                                    ? `This visitor is the leader of a group (${visit.group_size} people). After validation, please validate each companion individually.`
+                                    : 'This visitor is part of a group. Validate each member separately to assign badges.'}
+                            </AlertDescription>
+                        </Alert>
+                    )}
                 </DialogHeader>
 
                 <form onSubmit={handleSubmit} className="space-y-6 pt-2">

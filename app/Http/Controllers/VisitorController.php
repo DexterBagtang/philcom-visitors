@@ -12,6 +12,7 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 
@@ -23,6 +24,7 @@ class VisitorController {
     {
         return Inertia::render('visitors/visitor-checkin');
     }
+    
     public function showVisitorFormQr(){
         return Inertia::render('visitors/visitor-checkin-qr');
     }
@@ -30,106 +32,6 @@ class VisitorController {
     /**
      * Handle visitor check-in submission
      */
-//    public function checkIn(Request $request)
-//    {
-////        dd($request->all());
-//        // Validate the incoming request
-//        $validator = Validator::make($request->all(), [
-//            'first_name' => 'required|string|max:255',
-//            'last_name' => 'required|string|max:255',
-//            'company' => 'nullable|string|max:255',
-//            'person_to_visit' => 'required|string|max:255',
-//            'visit_purpose' => 'required|string|max:1000',
-//            'visit_purpose_other' => 'required_if:visit_purpose,Others|string|max:255|nullable',
-//            'visitor_type' => 'required',
-//            'visitor_type_other' => 'required_if:visitor_type,Other|string|max:255|nullable',
-//        ]);
-//
-//
-//        if ($validator->fails()) {
-//            return redirect()->back()
-//                ->withErrors($validator)
-//                ->withInput();
-//        }
-//
-//        try {
-//            // Check if visitor already exists (by email and phone)
-//            $visitor = Visitor::where('name', $request->name)
-//                ->first();
-//
-//            // If visitor doesn't exist, create a new one
-//            if (!$visitor) {
-//                $visitor = Visitor::create([
-//                    'name' => $request->name,
-//                    'company' => $request->company,
-//                    'person_to_visit' => $request->person_to_visit,
-//                    'visit_purpose' => $request->visit_purpose,
-//                    'type' =>  $request->visitor_type,
-//                ]);
-//            } else {
-//                // Update existing visitor information if needed
-//                $visitor->update([
-//                    'name' => $request->name,
-//                    'company' => $request->company,
-//                    'person_to_visit' => $request->person_to_visit,
-//                    'visit_purpose' => $request->visit_purpose,
-//                    'type' =>  $request->visitor_type,
-//                ]);
-//            }
-//
-//            // Check if visitor has an active visit (not checked out)
-//            $activeVisit = Visit::where('visitor_id', $visitor->id)
-//                ->whereIn('status', ['checked_in', 'ongoing'])
-//                ->first();
-//
-//            if ($activeVisit) {
-//                return redirect()->back()
-//                    ->with('error', 'You already have an active visit. Please check out first before creating a new visit.');
-//            }
-//
-//            // Create a new visit record with 'checked_in' status
-//            $visit = Visit::create([
-//                'visitor_id' => $visitor->id,
-//                'status' => 'checked_in',
-//                'check_in_time' => now(),
-//                // These fields will be filled by staff during validation
-//                'validated_by' => null,
-//                'id_type_checked' => null,
-//                'id_number_checked' => null,
-//                'validation_notes' => null,
-//            ]);
-//
-//            // Log the activity
-//            \Log::info('New visitor check-in', [
-//                'visitor_id' => $visitor->id,
-//                'visit_id' => $visit->id,
-//                'name' => $visitor->name,
-//                'company' => $visitor->company,
-//                'person_to_visit' => $visitor->person_to_visit,
-//                'ip_address' => $request->ip(),
-//                'user_agent' => $request->userAgent(),
-//            ]);
-//
-////            event(new VisitorCreated($visitor));
-//            event(new VisitCreated($visit));
-//
-//
-//            // Redirect with success message
-//            return redirect()->back()
-//                ->with('success', 'Check-in successful! Please proceed to the reception desk.');
-//
-//        } catch (\Exception $e) {
-//            \Log::error('Visitor check-in failed', [
-//                'error' => $e->getMessage(),
-//                'request_data' => $request->all(),
-//            ]);
-//
-//            return redirect()->back()
-//                ->with('error', 'An error occurred during check-in. Please try again or contact reception.')
-//                ->withInput();
-//        }
-//    }
-
     public function checkIn(Request $request)
     {
         $validated = $request->validate([
@@ -212,7 +114,131 @@ class VisitorController {
         }
     }
 
+    /**
+     * Handle group check-in submission
+     */
+    public function checkInGroup(Request $request)
+    {
+        // Validate the group leader data
+        $validated = $request->validate([
+            'group_leader' => 'required|array',
+            'group_leader.first_name' => 'required|string|max:255',
+            'group_leader.last_name' => 'required|string|max:255',
+            'group_leader.company' => 'required|string|max:255',
+            'group_leader.person_to_visit' => 'required|string|max:255',
+            'group_leader.visit_purpose' => 'required|string|max:1000',
+            'group_leader.visit_purpose_other' => 'required_if:group_leader.visit_purpose,Others|string|max:255|nullable',
+            'group_leader.visitor_type' => 'required|string|max:255',
+            'group_leader.visitor_type_other' => 'required_if:group_leader.visitor_type,Other|string|max:255|nullable',
+            
+            'companions' => 'required|array|min:1|max:20',
+            'companions.*.first_name' => 'required|string|max:255',
+            'companions.*.last_name' => 'required|string|max:255',
+            'companions.*.person_to_visit' => 'nullable|string|max:255',
+        ]);
 
+        try {
+            DB::beginTransaction();
+
+            // Generate unique group ID
+            $groupId = 'GRP-' . now()->format('YmdHis') . '-' . Str::random(6);
+
+            // Process visit purpose and type for group leader
+            $leaderData = $validated['group_leader'];
+            $visitPurpose = $leaderData['visit_purpose'];
+            if ($visitPurpose === 'Others' && !empty($leaderData['visit_purpose_other'])) {
+                $visitPurpose = $leaderData['visit_purpose_other'];
+            }
+
+            $visitorType = $leaderData['visitor_type'];
+            if ($visitorType === 'Other' && !empty($leaderData['visitor_type_other'])) {
+                $visitorType = $leaderData['visitor_type_other'];
+            }
+
+            // Create group leader visitor and visit
+            $leaderVisitor = Visitor::create([
+                'first_name' => $leaderData['first_name'],
+                'last_name' => $leaderData['last_name'],
+                'company' => $leaderData['company'],
+                'person_to_visit' => $leaderData['person_to_visit'],
+                'visit_purpose' => $visitPurpose,
+                'type' => $visitorType,
+            ]);
+
+            $leaderVisit = Visit::create([
+                'visitor_id' => $leaderVisitor->id,
+                'status' => 'checked_in',
+                'check_in_time' => now(),
+                'group_id' => $groupId,
+                'is_group_leader' => true,
+                'group_leader_visit_id' => null,
+            ]);
+
+            // Update leader visit to reference itself as group leader
+            $leaderVisit->update(['group_leader_visit_id' => $leaderVisit->id]);
+
+            // Create companion visitors and visits
+            $companionVisits = [];
+            foreach ($validated['companions'] as $companionData) {
+                $companionVisitor = Visitor::create([
+                    'first_name' => $companionData['first_name'],
+                    'last_name' => $companionData['last_name'],
+                    'company' => $leaderData['company'], // Same company as leader
+                    'person_to_visit' => $companionData['person_to_visit'] ?? $leaderData['person_to_visit'], // Use companion's person_to_visit if provided, else leader's
+                    'visit_purpose' => $visitPurpose, // Same purpose
+                    'type' => $visitorType, // Same type
+                ]);
+
+                $companionVisit = Visit::create([
+                    'visitor_id' => $companionVisitor->id,
+                    'status' => 'checked_in',
+                    'check_in_time' => now(),
+                    'group_id' => $groupId,
+                    'is_group_leader' => false,
+                    'group_leader_visit_id' => $leaderVisit->id,
+                ]);
+
+                $companionVisits[] = $companionVisit;
+            }
+
+            // Log the group check-in
+            \Log::info('Group check-in successful', [
+                'group_id' => $groupId,
+                'leader_visit_id' => $leaderVisit->id,
+                'leader_name' => $leaderVisitor->name,
+                'company' => $leaderData['company'],
+                'group_size' => count($validated['companions']) + 1,
+                'ip_address' => $request->ip(),
+            ]);
+
+            // Broadcast events for real-time updates
+            event(new VisitCreated($leaderVisit));
+            foreach ($companionVisits as $companionVisit) {
+                event(new VisitCreated($companionVisit));
+            }
+
+            DB::commit();
+
+            return redirect()->back()->with('success', [
+                'message' => 'Group check-in successful!',
+                'group_size' => count($validated['companions']) + 1,
+                'group_id' => $groupId,
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            
+            \Log::error('Group check-in failed', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+                'request_data' => $request->all(),
+            ]);
+
+            return redirect()->back()
+                ->with('error', 'An error occurred during group check-in. Please try again or contact reception.')
+                ->withInput();
+        }
+    }
 
     public function index()
     {

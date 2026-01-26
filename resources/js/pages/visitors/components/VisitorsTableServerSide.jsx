@@ -505,6 +505,32 @@ export default function VisitorsTableServerSide({ visits = {}, meta = {}, onRefr
             },
         },
         {
+            accessorKey: 'group_id',
+            id: 'group',
+            header: () => (
+                <div className="flex items-center font-semibold text-slate-700">
+                    <Users className="mr-2 h-4 w-4" />
+                    Group
+                </div>
+            ),
+            cell: ({ row }) => {
+                const visit = row.original;
+                if (!visit.group_id) return <div className="text-center text-sm text-slate-400">-</div>;
+
+                return (
+                    <div className="flex items-center gap-1">
+                        <Users className="w-4 h-4 text-slate-500" />
+                        {visit.is_group_leader && (
+                            <Badge variant="default" className="text-xs bg-blue-600">Leader</Badge>
+                        )}
+                        {!visit.is_group_leader && (
+                            <Badge variant="secondary" className="text-xs">Member</Badge>
+                        )}
+                    </div>
+                );
+            },
+        },
+        {
             accessorKey: 'check_in_time',
             id: 'check_in_time',
             header: ({ column }) => (

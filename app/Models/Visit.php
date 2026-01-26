@@ -15,9 +15,10 @@ class Visit extends Model
         'notify_employee', 'notified_employee_id', 'notified_employee_name',
         'notified_employee_email', 'notified_employee_department',
         'notification_sent', 'notification_sent_at', 'notification_error',
+        'group_id', 'is_group_leader', 'group_leader_visit_id',
     ];
 
-    protected $appends = ['is_overdue'];
+    protected $appends = ['is_overdue', 'group_size'];
 
     const OVERDUE_HOURS = 12;
 
@@ -27,6 +28,7 @@ class Visit extends Model
         'notification_sent_at' => 'datetime',
         'notify_employee' => 'boolean',
         'notification_sent' => 'boolean',
+        'is_group_leader' => 'boolean',
     ];
 
     public function visitor()
@@ -71,5 +73,47 @@ class Visit extends Model
         }
 
         return $this->check_in_time->lt(now()->subHours(self::OVERDUE_HOURS));
+    }
+
+    // Group relationships
+    public function groupLeader()
+    {
+        return $this->belongsTo(Visit::class, 'group_leader_visit_id');
+    }
+
+    public function groupMembers()
+    {
+        return $this->hasMany(Visit::class, 'group_leader_visit_id')
+            ->with('visitor');
+    }
+
+    // Group scopes
+    public function scopeGroupLeaders($query)
+    {
+        return $query->where('is_group_leader', true);
+    }
+
+    public function scopeInGroup($query, $groupId)
+    {
+        return $query->where('group_id', $groupId);
+    }
+
+    // Group helper methods
+    public function hasGroup()
+    {
+        return !is_null($this->group_id);
+    }
+
+    public function getGroupSizeAttribute()
+    {
+        if (!$this->hasGroup()) {
+            return 1;
+        }
+        
+        if ($this->is_group_leader) {
+            return $this->groupMembers()->count() + 1;
+        }
+        
+        return Visit::where('group_id', $this->group_id)->count();
     }
 }

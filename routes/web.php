@@ -30,9 +30,14 @@ Route::prefix('visitor')->group(function () {
 
     Route::get('/check-in/qr', [VisitorController::class, 'showVisitorFormQr'])
         ->name('visitor.check-in.form.qr');
+    
     // Handle check-in form submission
     Route::post('/check-in', [VisitorController::class, 'checkIn'])
         ->name('visitor.check-in.submit');
+    
+    // Handle group check-in
+    Route::post('/check-in/group', [VisitorController::class, 'checkInGroup'])
+        ->name('visitor.check-in.group');
 });
 
 
