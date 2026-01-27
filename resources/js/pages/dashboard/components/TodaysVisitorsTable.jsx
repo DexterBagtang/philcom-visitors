@@ -97,7 +97,7 @@ export default function TodaysVisitorsTable({ visitors, activeQuickFilter, onQui
     const [columnFilters, setColumnFilters] = useState([]);
     const [pagination, setPagination] = useState({
         pageIndex: 0,
-        pageSize: 10,
+        pageSize: 50,
     });
 
     // Dialog state
