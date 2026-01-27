@@ -44,7 +44,7 @@ export function CompanionsSection({
                 <AlertDescription className="text-sm">
                     {companions.length === 0
                         ? "No companions? No problem! You can skip this section if you're visiting alone."
-                        : `You've added ${companions.length} companion${companions.length > 1 ? 's' : ''}. You can add up to ${maxCompanions} companions.`
+                        : `You may add up to ${maxCompanions} companions.`
                     }
                 </AlertDescription>
             </Alert>
