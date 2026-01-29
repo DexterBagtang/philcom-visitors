@@ -27,7 +27,7 @@ export function CompanionsSection({
                 <div className="flex items-center gap-2">
                     <Users className="w-5 h-5 text-primary" />
                     <h2 className="text-lg font-semibold">
-                        Companions
+                        Companions/Guest
                     </h2>
                     <Badge variant="outline" className="text-xs">
                         Optional
@@ -43,7 +43,7 @@ export function CompanionsSection({
                 <Info className="h-4 w-4" />
                 <AlertDescription className="text-sm">
                     {companions.length === 0
-                        ? "No companions? No problem! You can skip this section if you're visiting alone."
+                        ? "Visiting alone? You can skip this section."
                         : `You may add up to ${maxCompanions} companions.`
                     }
                 </AlertDescription>
