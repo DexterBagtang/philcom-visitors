@@ -471,6 +471,26 @@ class VisitorController {
             }
         }
 
+        // Visitor type filter
+        if ($request->filled('visitorTypes')) {
+            $visitorTypes = $request->get('visitorTypes');
+            if (!empty($visitorTypes)) {
+                $query->whereHas('visitor', function($q) use ($visitorTypes) {
+                    $q->whereIn('type', $visitorTypes);
+                });
+            }
+        }
+
+        // Visit purpose filter
+        if ($request->filled('visitPurposes')) {
+            $visitPurposes = $request->get('visitPurposes');
+            if (!empty($visitPurposes)) {
+                $query->whereHas('visitor', function($q) use ($visitPurposes) {
+                    $q->whereIn('visit_purpose', $visitPurposes);
+                });
+            }
+        }
+
         // Column-specific filters
         if ($request->filled('columnFilters')) {
             $columnFilters = $request->get('columnFilters');

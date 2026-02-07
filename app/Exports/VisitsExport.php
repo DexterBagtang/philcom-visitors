@@ -22,13 +22,17 @@ class VisitsExport implements FromQuery, WithHeadings, WithMapping, WithStyles, 
     protected $dateTo;
     protected $status;
     protected $includeCheckOut;
+    protected $visitorTypes;
+    protected $visitPurposes;
 
-    public function __construct($dateFrom = null, $dateTo = null, $status = null, $includeCheckOut = true)
+    public function __construct($dateFrom = null, $dateTo = null, $status = null, $includeCheckOut = true, $visitorTypes = [], $visitPurposes = [])
     {
         $this->dateFrom = $dateFrom;
         $this->dateTo = $dateTo;
         $this->status = $status;
         $this->includeCheckOut = $includeCheckOut;
+        $this->visitorTypes = $visitorTypes;
+        $this->visitPurposes = $visitPurposes;
     }
 
     public function query()
@@ -50,6 +54,20 @@ class VisitsExport implements FromQuery, WithHeadings, WithMapping, WithStyles, 
         // Apply status filter
         if ($this->status && $this->status !== 'all') {
             $query->where('status', $this->status);
+        }
+
+        // Apply visitor type filter
+        if (!empty($this->visitorTypes)) {
+            $query->whereHas('visitor', function($q) {
+                $q->whereIn('type', $this->visitorTypes);
+            });
+        }
+
+        // Apply visit purpose filter
+        if (!empty($this->visitPurposes)) {
+            $query->whereHas('visitor', function($q) {
+                $q->whereIn('visit_purpose', $this->visitPurposes);
+            });
         }
 
         return $query->orderBy('check_in_time', 'desc');

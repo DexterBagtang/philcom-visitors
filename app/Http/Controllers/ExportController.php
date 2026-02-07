@@ -44,12 +44,18 @@ class ExportController extends Controller
             'date_to' => 'nullable|date|after_or_equal:date_from',
             'status' => 'nullable|in:all,checked_in,ongoing,checked_out',
             'include_checkout' => 'nullable|boolean',
+            'visitor_types' => 'nullable|array',
+            'visitor_types.*' => 'string|in:Contractor,Vendor,Visitor,Client,Delivery Personnel,Applicant,Other',
+            'visit_purposes' => 'nullable|array',
+            'visit_purposes.*' => 'string|in:Official Business,Meeting,Delivery,Collection,Payment,Billing,Submit Documents/Requirements,Interview,Repair/Maintenance,Others',
         ]);
 
         $dateFrom = $request->input('date_from');
         $dateTo = $request->input('date_to');
         $status = $request->input('status', 'all');
         $includeCheckOut = $request->input('include_checkout', true);
+        $visitorTypes = $request->input('visitor_types', []);
+        $visitPurposes = $request->input('visit_purposes', []);
 
         // Generate filename
         $filename = 'visitors_export_';
@@ -68,10 +74,18 @@ class ExportController extends Controller
             $filename .= '_' . $status;
         }
 
+        if (!empty($visitorTypes)) {
+            $filename .= '_' . count($visitorTypes) . 'types';
+        }
+
+        if (!empty($visitPurposes)) {
+            $filename .= '_' . count($visitPurposes) . 'purposes';
+        }
+
         $filename .= '_' . now()->format('YmdHis') . '.xlsx';
 
         return Excel::download(
-            new VisitsExport($dateFrom, $dateTo, $status, $includeCheckOut),
+            new VisitsExport($dateFrom, $dateTo, $status, $includeCheckOut, $visitorTypes, $visitPurposes),
             $filename
         );
     }
@@ -85,6 +99,10 @@ class ExportController extends Controller
             'date_from' => 'nullable|date',
             'date_to' => 'nullable|date|after_or_equal:date_from',
             'status' => 'nullable|in:all,checked_in,ongoing,checked_out',
+            'visitor_types' => 'nullable|array',
+            'visitor_types.*' => 'string|in:Contractor,Vendor,Visitor,Client,Delivery Personnel,Applicant,Other',
+            'visit_purposes' => 'nullable|array',
+            'visit_purposes.*' => 'string|in:Official Business,Meeting,Delivery,Collection,Payment,Billing,Submit Documents/Requirements,Interview,Repair/Maintenance,Others',
         ]);
 
         $query = Visit::with(['visitor', 'latestBadgeAssignment.badge']);
@@ -92,6 +110,8 @@ class ExportController extends Controller
         $dateFrom = $request->input('date_from');
         $dateTo = $request->input('date_to');
         $status = $request->input('status', 'all');
+        $visitorTypes = $request->input('visitor_types', []);
+        $visitPurposes = $request->input('visit_purposes', []);
 
         // Apply filters
         if ($dateFrom && $dateTo) {
@@ -107,6 +127,18 @@ class ExportController extends Controller
 
         if ($status && $status !== 'all') {
             $query->where('status', $status);
+        }
+
+        if (!empty($visitorTypes)) {
+            $query->whereHas('visitor', function($q) use ($visitorTypes) {
+                $q->whereIn('type', $visitorTypes);
+            });
+        }
+
+        if (!empty($visitPurposes)) {
+            $query->whereHas('visitor', function($q) use ($visitPurposes) {
+                $q->whereIn('visit_purpose', $visitPurposes);
+            });
         }
 
         // Get total count before limiting

@@ -38,10 +38,34 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Checkbox } from '@/components/ui/checkbox';
+import { MultiSelect } from '@/components/ui/multi-select';
+import { FilterSummary } from '@/pages/exports/components/filter-summary';
 const ValidationDialog = lazy(()=> import('./ValidationDialog'));
 const CheckoutDialog = lazy(()=> import('@/pages/visitors/components/CheckoutDialog.jsx'));
 const BulkCheckoutDialog = lazy(()=> import('@/pages/visitors/components/BulkCheckoutDialog.jsx'));
 
+const VISITOR_TYPE_OPTIONS = [
+    { label: 'Contractor', value: 'Contractor' },
+    { label: 'Vendor', value: 'Vendor' },
+    { label: 'Visitor', value: 'Visitor' },
+    { label: 'Client', value: 'Client' },
+    { label: 'Delivery Personnel', value: 'Delivery Personnel' },
+    { label: 'Applicant', value: 'Applicant' },
+    { label: 'Other', value: 'Other' },
+];
+
+const VISIT_PURPOSE_OPTIONS = [
+    { label: 'Official Business', value: 'Official Business' },
+    { label: 'Meeting', value: 'Meeting' },
+    { label: 'Delivery', value: 'Delivery' },
+    { label: 'Collection', value: 'Collection' },
+    { label: 'Payment', value: 'Payment' },
+    { label: 'Billing', value: 'Billing' },
+    { label: 'Submit Documents/Requirements', value: 'Submit Documents/Requirements' },
+    { label: 'Interview', value: 'Interview' },
+    { label: 'Repair/Maintenance', value: 'Repair/Maintenance' },
+    { label: 'Others', value: 'Others' },
+];
 
 export default function VisitorsTableServerSide({ visits = {}, meta = {}, onRefresh }) {
     // Server-side state management
@@ -51,6 +75,8 @@ export default function VisitorsTableServerSide({ visits = {}, meta = {}, onRefr
     const [activeQuickFilter, setActiveQuickFilter] = useState(null);
     const [dateRange, setDateRange] = useState({ from: null, to: null });
     const [showDateFilter, setShowDateFilter] = useState(false);
+    const [visitorTypes, setVisitorTypes] = useState([]);
+    const [visitPurposes, setVisitPurposes] = useState([]);
 
     // Dialog state
     const [showValidationDialog, setShowValidationDialog] = useState(false);
@@ -103,6 +129,8 @@ export default function VisitorsTableServerSide({ visits = {}, meta = {}, onRefr
             ...(localSearch && !params.hasOwnProperty('globalFilter') && { globalFilter: localSearch }),
             ...(dateRange.from && !params.hasOwnProperty('dateRange[from]') && { 'dateRange[from]': format(dateRange.from, 'yyyy-MM-dd') }),
             ...(dateRange.to && !params.hasOwnProperty('dateRange[to]') && { 'dateRange[to]': format(dateRange.to, 'yyyy-MM-dd') }),
+            ...(visitorTypes.length > 0 && !params.hasOwnProperty('visitorTypes') && { visitorTypes }),
+            ...(visitPurposes.length > 0 && !params.hasOwnProperty('visitPurposes') && { visitPurposes }),
             ...params,
         };
 
@@ -111,7 +139,7 @@ export default function VisitorsTableServerSide({ visits = {}, meta = {}, onRefr
             preserveScroll: true,
             replace: true,
         });
-    }, [tableMeta.pageIndex, tableMeta.pageSize, sorting, activeQuickFilter, localSearch, dateRange.from, dateRange.to]);
+    }, [tableMeta.pageIndex, tableMeta.pageSize, sorting, activeQuickFilter, localSearch, dateRange.from, dateRange.to, visitorTypes, visitPurposes]);
 
     // Debounced search handler
     const handleSearchChange = (value) => {
@@ -198,12 +226,61 @@ export default function VisitorsTableServerSide({ visits = {}, meta = {}, onRefr
         setLocalSearch('');
         setActiveQuickFilter(null);
         setDateRange({ from: null, to: null });
+        setVisitorTypes([]);
+        setVisitPurposes([]);
 
         makeServerRequest({
             globalFilter: undefined,
             quickFilter: undefined,
             'dateRange[from]': undefined,
             'dateRange[to]': undefined,
+            visitorTypes: undefined,
+            visitPurposes: undefined,
+            pageIndex: 0,
+        });
+    };
+
+    // Handle visitor type filter change
+    const handleVisitorTypesChange = (types) => {
+        setVisitorTypes(types);
+        setSelectedVisitIds([]); // Clear selections when filter changes
+
+        makeServerRequest({
+            visitorTypes: types.length > 0 ? types : undefined,
+            pageIndex: 0,
+        });
+    };
+
+    // Handle visit purpose filter change
+    const handleVisitPurposesChange = (purposes) => {
+        setVisitPurposes(purposes);
+        setSelectedVisitIds([]); // Clear selections when filter changes
+
+        makeServerRequest({
+            visitPurposes: purposes.length > 0 ? purposes : undefined,
+            pageIndex: 0,
+        });
+    };
+
+    // Individual filter removal handlers for FilterSummary
+    const handleRemoveVisitorType = (type) => {
+        const updatedTypes = visitorTypes.filter(t => t !== type);
+        setVisitorTypes(updatedTypes);
+        setSelectedVisitIds([]);
+
+        makeServerRequest({
+            visitorTypes: updatedTypes.length > 0 ? updatedTypes : undefined,
+            pageIndex: 0,
+        });
+    };
+
+    const handleRemoveVisitPurpose = (purpose) => {
+        const updatedPurposes = visitPurposes.filter(p => p !== purpose);
+        setVisitPurposes(updatedPurposes);
+        setSelectedVisitIds([]);
+
+        makeServerRequest({
+            visitPurposes: updatedPurposes.length > 0 ? updatedPurposes : undefined,
             pageIndex: 0,
         });
     };
@@ -689,7 +766,7 @@ export default function VisitorsTableServerSide({ visits = {}, meta = {}, onRefr
     });
 
     // Check for active filters
-    const hasActiveFilters = activeQuickFilter || dateRange.from || dateRange.to || localSearch;
+    const hasActiveFilters = activeQuickFilter || dateRange.from || dateRange.to || localSearch || visitorTypes.length > 0 || visitPurposes.length > 0;
 
     return (
         <>
@@ -700,85 +777,34 @@ export default function VisitorsTableServerSide({ visits = {}, meta = {}, onRefr
                 <div className="rounded-xl border border-slate-200/60 bg-white shadow-sm backdrop-blur-sm">
                     {/* Main content area with better spacing */}
                     <div className="p-6 pb-4">
-                        <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
-                            {/* Left section - Search and actions */}
-                            <div className="flex flex-1 flex-col items-start gap-4 sm:flex-row sm:items-center">
-                                {/* Enhanced search input with better visual weight */}
-                                <div className="relative max-w-md flex-1">
+                        <div className="space-y-4">
+                            {/* Top row - Search and action buttons */}
+                            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                                {/* Enhanced search input */}
+                                <div className="relative flex-1 max-w-md">
                                     <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                                         <Search className="h-5 w-5 text-slate-400" />
                                     </div>
-
                                     <Input
                                         placeholder="Search by name, company, or purpose..."
                                         value={localSearch}
                                         onChange={(e) => handleSearchChange(e.target.value)}
-                                        className="w-full rounded-lg border-slate-300 bg-slate-50/50 py-3 pr-4 pl-10 text-slate-900 placeholder-slate-500 transition-all hover:bg-white focus:border-blue-500 focus:ring-blue-500/20"
+                                        className="w-full rounded-lg border-slate-300 bg-slate-50/50 py-2.5 pr-10 pl-10 text-slate-900 placeholder-slate-500 transition-all hover:bg-white focus:border-blue-500 focus:ring-blue-500/20"
                                     />
-
-                                    {/* Clear button */}
                                     {localSearch && (
                                         <Button
                                             variant="ghost"
                                             size="sm"
                                             onClick={() => handleSearchChange('')}
-                                            className="absolute top-1/2 right-3 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                                            className="absolute top-1/2 right-2 h-6 w-6 -translate-y-1/2 p-0 text-slate-400 hover:text-slate-600"
                                         >
                                             <X className="h-4 w-4" />
                                         </Button>
                                     )}
                                 </div>
 
-                                {/* Action buttons with better spacing */}
-                                <div className="flex items-center gap-2">
-                                    <Popover open={showDateFilter} onOpenChange={setShowDateFilter}>
-                                        <PopoverTrigger asChild>
-                                            <Button
-                                                variant="outline"
-                                                className={cn(
-                                                    'flex items-center gap-2 border-slate-300 text-sm',
-                                                    (dateRange.from || dateRange.to) && 'border-blue-500 bg-blue-50 text-blue-700',
-                                                )}
-                                            >
-                                                <CalendarIcon className="h-4 w-4" />
-                                                Date Filter
-                                            </Button>
-                                        </PopoverTrigger>
-                                        <PopoverContent className="w-auto" align="start">
-                                            <div className="space-y-4">
-                                                <div>
-                                                    <Label className="text-sm font-medium">Select Date Range</Label>
-                                                    <Calendar
-                                                        mode="range"
-                                                        selected={dateRange}
-                                                        onSelect={(range) =>
-                                                            handleDateRangeFilter(
-                                                                range || {
-                                                                    from: null,
-                                                                    to: null,
-                                                                },
-                                                            )
-                                                        }
-                                                        numberOfMonths={2}
-                                                        className="rounded-md border"
-                                                    />
-                                                </div>
-                                                <div className="flex gap-2">
-                                                    <Button
-                                                        size="sm"
-                                                        variant="outline"
-                                                        onClick={() => handleDateRangeFilter({ from: null, to: null })}
-                                                    >
-                                                        Clear
-                                                    </Button>
-                                                    <Button size="sm" onClick={() => setShowDateFilter(false)}>
-                                                        Apply
-                                                    </Button>
-                                                </div>
-                                            </div>
-                                        </PopoverContent>
-                                    </Popover>
-
+                                {/* Action buttons */}
+                                <div className="flex flex-wrap items-center gap-2">
                                     {selectedVisitIds.length > 0 && (
                                         <Button
                                             onClick={() => setShowBulkCheckoutDialog(true)}
@@ -790,7 +816,6 @@ export default function VisitorsTableServerSide({ visits = {}, meta = {}, onRefr
                                             Bulk Checkout ({selectedVisitIds.length})
                                         </Button>
                                     )}
-
                                     <Button
                                         onClick={onRefresh}
                                         variant="ghost"
@@ -799,9 +824,8 @@ export default function VisitorsTableServerSide({ visits = {}, meta = {}, onRefr
                                         title="Refresh visitor list"
                                     >
                                         <RefreshCcw className="h-4 w-4" />
-                                        Refresh
+                                        <span className="hidden sm:inline">Refresh</span>
                                     </Button>
-
                                     {hasActiveFilters && (
                                         <Button
                                             onClick={clearAllFilters}
@@ -810,14 +834,86 @@ export default function VisitorsTableServerSide({ visits = {}, meta = {}, onRefr
                                             className="flex items-center gap-2 border-red-200 text-red-600 hover:bg-red-50"
                                         >
                                             <X className="h-4 w-4" />
-                                            Clear All Filters
+                                            <span className="hidden sm:inline">Clear All</span>
                                         </Button>
                                     )}
                                 </div>
                             </div>
 
-                            {/* Right section - Stats and pagination */}
-                            <div className="flex min-w-0 items-center justify-between gap-6 sm:justify-end">
+                            {/* Filters row */}
+                            <div className="flex flex-wrap items-center gap-3">
+                                <span className="text-sm font-medium text-slate-600">Filters:</span>
+
+                                <Popover open={showDateFilter} onOpenChange={setShowDateFilter}>
+                                    <PopoverTrigger asChild>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            className={cn(
+                                                'flex items-center gap-2 border-slate-300',
+                                                (dateRange.from || dateRange.to) && 'border-blue-500 bg-blue-50 text-blue-700',
+                                            )}
+                                        >
+                                            <CalendarIcon className="h-4 w-4" />
+                                            Date Range
+                                        </Button>
+                                    </PopoverTrigger>
+                                    <PopoverContent className="w-auto" align="start">
+                                        <div className="space-y-4">
+                                            <div>
+                                                <Label className="text-sm font-medium">Select Date Range</Label>
+                                                <Calendar
+                                                    mode="range"
+                                                    selected={dateRange}
+                                                    onSelect={(range) =>
+                                                        handleDateRangeFilter(
+                                                            range || {
+                                                                from: null,
+                                                                to: null,
+                                                            },
+                                                        )
+                                                    }
+                                                    numberOfMonths={2}
+                                                    className="rounded-md border"
+                                                />
+                                            </div>
+                                            <div className="flex gap-2">
+                                                <Button
+                                                    size="sm"
+                                                    variant="outline"
+                                                    onClick={() => handleDateRangeFilter({ from: null, to: null })}
+                                                >
+                                                    Clear
+                                                </Button>
+                                                <Button size="sm" onClick={() => setShowDateFilter(false)}>
+                                                    Apply
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    </PopoverContent>
+                                </Popover>
+
+                                <div className="w-full sm:w-56">
+                                    <MultiSelect
+                                        options={VISITOR_TYPE_OPTIONS}
+                                        selected={visitorTypes}
+                                        onChange={handleVisitorTypesChange}
+                                        placeholder="Visitor Types"
+                                    />
+                                </div>
+
+                                <div className="w-full sm:w-64">
+                                    <MultiSelect
+                                        options={VISIT_PURPOSE_OPTIONS}
+                                        selected={visitPurposes}
+                                        onChange={handleVisitPurposesChange}
+                                        placeholder="Visit Purposes"
+                                    />
+                                </div>
+                            </div>
+
+                            {/* Stats and pagination row */}
+                            <div className="flex flex-wrap items-center justify-between gap-4 border-t border-slate-100 pt-4">
                                 {/* Enhanced visitor count with icon */}
                                 <div className="flex items-center gap-2 rounded-lg border border-blue-100 bg-gradient-to-r from-blue-50 to-indigo-50 px-4 py-2">
                                     <Users className="h-4 w-4 text-blue-600" />
@@ -915,6 +1011,24 @@ export default function VisitorsTableServerSide({ visits = {}, meta = {}, onRefr
                                             </button>
                                         </Badge>
                                     )}
+
+                                    {visitorTypes.map((type) => (
+                                        <Badge key={type} variant="secondary" className="text-xs">
+                                            Type: {type}
+                                            <button onClick={() => handleRemoveVisitorType(type)} className="ml-1 hover:text-red-600">
+                                                <X className="h-3 w-3" />
+                                            </button>
+                                        </Badge>
+                                    ))}
+
+                                    {visitPurposes.map((purpose) => (
+                                        <Badge key={purpose} variant="secondary" className="text-xs">
+                                            Purpose: {purpose}
+                                            <button onClick={() => handleRemoveVisitPurpose(purpose)} className="ml-1 hover:text-red-600">
+                                                <X className="h-3 w-3" />
+                                            </button>
+                                        </Badge>
+                                    ))}
                                 </div>
                             )}
                         </div>

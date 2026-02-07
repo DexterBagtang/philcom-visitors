@@ -14,6 +14,8 @@ import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 import type { BreadcrumbItem } from '@/types';
 import { PreviewDialog } from './components/preview-dialog';
+import { MultiSelect, type MultiSelectOption } from '@/components/ui/multi-select';
+import { FilterSummary } from './components/filter-summary';
 
 interface ExportStats {
     total_visits: number;
@@ -33,16 +35,41 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
+const VISITOR_TYPE_OPTIONS: MultiSelectOption[] = [
+    { label: 'Contractor', value: 'Contractor' },
+    { label: 'Vendor', value: 'Vendor' },
+    { label: 'Visitor', value: 'Visitor' },
+    { label: 'Client', value: 'Client' },
+    { label: 'Delivery Personnel', value: 'Delivery Personnel' },
+    { label: 'Applicant', value: 'Applicant' },
+    { label: 'Other', value: 'Other' },
+];
+
+const VISIT_PURPOSE_OPTIONS: MultiSelectOption[] = [
+    { label: 'Official Business', value: 'Official Business' },
+    { label: 'Meeting', value: 'Meeting' },
+    { label: 'Delivery', value: 'Delivery' },
+    { label: 'Collection', value: 'Collection' },
+    { label: 'Payment', value: 'Payment' },
+    { label: 'Billing', value: 'Billing' },
+    { label: 'Submit Documents/Requirements', value: 'Submit Documents/Requirements' },
+    { label: 'Interview', value: 'Interview' },
+    { label: 'Repair/Maintenance', value: 'Repair/Maintenance' },
+    { label: 'Others', value: 'Others' },
+];
+
 export default function ExportPage({ stats }: Props) {
     const [dateFrom, setDateFrom] = useState<Date>();
     const [dateTo, setDateTo] = useState<Date>();
     const [status, setStatus] = useState<string>('all');
     const [includeCheckout, setIncludeCheckout] = useState(true);
+    const [visitorTypes, setVisitorTypes] = useState<string[]>([]);
+    const [visitPurposes, setVisitPurposes] = useState<string[]>([]);
     const [isExporting, setIsExporting] = useState(false);
 
     const handleQuickDateRange = (range: string) => {
         const today = new Date();
-        
+
         switch (range) {
             case 'today':
                 setDateFrom(today);
@@ -68,6 +95,24 @@ export default function ExportPage({ stats }: Props) {
                 setDateFrom(lastWeekStart);
                 setDateTo(lastWeekEnd);
                 break;
+            case 'last_7_days':
+                const last7Start = new Date(today);
+                last7Start.setDate(today.getDate() - 6);
+                setDateFrom(last7Start);
+                setDateTo(today);
+                break;
+            case 'last_30_days':
+                const last30Start = new Date(today);
+                last30Start.setDate(today.getDate() - 29);
+                setDateFrom(last30Start);
+                setDateTo(today);
+                break;
+            case 'last_90_days':
+                const last90Start = new Date(today);
+                last90Start.setDate(today.getDate() - 89);
+                setDateFrom(last90Start);
+                setDateTo(today);
+                break;
             case 'this_month':
                 const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
                 setDateFrom(monthStart);
@@ -78,6 +123,23 @@ export default function ExportPage({ stats }: Props) {
                 const lastMonthEnd = new Date(today.getFullYear(), today.getMonth(), 0);
                 setDateFrom(lastMonthStart);
                 setDateTo(lastMonthEnd);
+                break;
+            case 'this_quarter':
+                const currentQuarter = Math.floor(today.getMonth() / 3);
+                const quarterStart = new Date(today.getFullYear(), currentQuarter * 3, 1);
+                setDateFrom(quarterStart);
+                setDateTo(today);
+                break;
+            case 'year_to_date':
+                const yearStart = new Date(today.getFullYear(), 0, 1);
+                setDateFrom(yearStart);
+                setDateTo(today);
+                break;
+            case 'last_year':
+                const lastYearStart = new Date(today.getFullYear() - 1, 0, 1);
+                const lastYearEnd = new Date(today.getFullYear() - 1, 11, 31);
+                setDateFrom(lastYearStart);
+                setDateTo(lastYearEnd);
                 break;
             case 'all':
                 setDateFrom(undefined);
@@ -90,7 +152,7 @@ export default function ExportPage({ stats }: Props) {
         setIsExporting(true);
 
         const params = new URLSearchParams();
-        
+
         if (dateFrom) {
             params.append('date_from', format(dateFrom, 'yyyy-MM-dd'));
         }
@@ -101,6 +163,14 @@ export default function ExportPage({ stats }: Props) {
             params.append('status', status);
         }
         params.append('include_checkout', includeCheckout ? '1' : '0');
+
+        visitorTypes.forEach((type) => {
+            params.append('visitor_types[]', type);
+        });
+
+        visitPurposes.forEach((purpose) => {
+            params.append('visit_purposes[]', purpose);
+        });
 
         const link = document.createElement('a');
         link.href = `/exports/download?${params.toString()}`;
@@ -113,6 +183,23 @@ export default function ExportPage({ stats }: Props) {
                 duration: 3000,
             });
         }, 500);
+    };
+
+    const handleClearAllFilters = () => {
+        setDateFrom(undefined);
+        setDateTo(undefined);
+        setStatus('all');
+        setVisitorTypes([]);
+        setVisitPurposes([]);
+        setIncludeCheckout(true);
+    };
+
+    const handleRemoveVisitorType = (type: string) => {
+        setVisitorTypes(visitorTypes.filter((t) => t !== type));
+    };
+
+    const handleRemoveVisitPurpose = (purpose: string) => {
+        setVisitPurposes(visitPurposes.filter((p) => p !== purpose));
     };
 
     const getRecordCountEstimate = () => {
@@ -196,11 +283,33 @@ export default function ExportPage({ stats }: Props) {
                                 <Button type="button" variant="outline" size="sm" onClick={() => handleQuickDateRange('yesterday')}>Yesterday</Button>
                                 <Button type="button" variant="outline" size="sm" onClick={() => handleQuickDateRange('this_week')}>This Week</Button>
                                 <Button type="button" variant="outline" size="sm" onClick={() => handleQuickDateRange('last_week')}>Last Week</Button>
+                                <Button type="button" variant="outline" size="sm" onClick={() => handleQuickDateRange('last_7_days')}>Last 7 Days</Button>
+                                <Button type="button" variant="outline" size="sm" onClick={() => handleQuickDateRange('last_30_days')}>Last 30 Days</Button>
+                                <Button type="button" variant="outline" size="sm" onClick={() => handleQuickDateRange('last_90_days')}>Last 90 Days</Button>
                                 <Button type="button" variant="outline" size="sm" onClick={() => handleQuickDateRange('this_month')}>This Month</Button>
                                 <Button type="button" variant="outline" size="sm" onClick={() => handleQuickDateRange('last_month')}>Last Month</Button>
+                                <Button type="button" variant="outline" size="sm" onClick={() => handleQuickDateRange('this_quarter')}>This Quarter</Button>
+                                <Button type="button" variant="outline" size="sm" onClick={() => handleQuickDateRange('year_to_date')}>Year to Date</Button>
+                                <Button type="button" variant="outline" size="sm" onClick={() => handleQuickDateRange('last_year')}>Last Year</Button>
                                 <Button type="button" variant="outline" size="sm" onClick={() => handleQuickDateRange('all')}>All Records</Button>
                             </div>
                         </div>
+
+                        <FilterSummary
+                            dateFrom={dateFrom}
+                            dateTo={dateTo}
+                            status={status}
+                            visitorTypes={visitorTypes}
+                            visitPurposes={visitPurposes}
+                            onRemoveDateRange={() => {
+                                setDateFrom(undefined);
+                                setDateTo(undefined);
+                            }}
+                            onRemoveStatus={() => setStatus('all')}
+                            onRemoveVisitorType={handleRemoveVisitorType}
+                            onRemoveVisitPurpose={handleRemoveVisitPurpose}
+                            onClearAll={handleClearAllFilters}
+                        />
 
                         <div className="grid gap-4 md:grid-cols-2">
                             <div className="space-y-2">
@@ -249,6 +358,28 @@ export default function ExportPage({ stats }: Props) {
                             </Select>
                         </div>
 
+                        <div className="grid gap-4 md:grid-cols-2">
+                            <div className="space-y-2">
+                                <Label htmlFor="visitor-types">Visitor Types</Label>
+                                <MultiSelect
+                                    options={VISITOR_TYPE_OPTIONS}
+                                    selected={visitorTypes}
+                                    onChange={setVisitorTypes}
+                                    placeholder="All types"
+                                />
+                            </div>
+
+                            <div className="space-y-2">
+                                <Label htmlFor="visit-purposes">Visit Purposes</Label>
+                                <MultiSelect
+                                    options={VISIT_PURPOSE_OPTIONS}
+                                    selected={visitPurposes}
+                                    onChange={setVisitPurposes}
+                                    placeholder="All purposes"
+                                />
+                            </div>
+                        </div>
+
                         <div className="space-y-3 rounded-lg border p-4">
                             <Label className="text-base font-semibold">Export Options</Label>
                             <div className="flex items-center space-x-2">
@@ -282,12 +413,7 @@ export default function ExportPage({ stats }: Props) {
                             <Button
                                 type="button"
                                 variant="outline"
-                                onClick={() => {
-                                    setDateFrom(undefined);
-                                    setDateTo(undefined);
-                                    setStatus('all');
-                                    setIncludeCheckout(true);
-                                }}
+                                onClick={handleClearAllFilters}
                             >
                                 Reset
                             </Button>
@@ -295,6 +421,8 @@ export default function ExportPage({ stats }: Props) {
                                 dateFrom={dateFrom}
                                 dateTo={dateTo}
                                 status={status}
+                                visitorTypes={visitorTypes}
+                                visitPurposes={visitPurposes}
                                 includeCheckout={includeCheckout}
                                 onExport={handleExport}
                             />

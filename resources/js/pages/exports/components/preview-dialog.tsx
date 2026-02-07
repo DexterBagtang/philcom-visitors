@@ -34,11 +34,13 @@ interface PreviewDialogProps {
     dateFrom?: Date;
     dateTo?: Date;
     status: string;
+    visitorTypes: string[];
+    visitPurposes: string[];
     includeCheckout: boolean;
     onExport: () => void;
 }
 
-export function PreviewDialog({ dateFrom, dateTo, status, includeCheckout, onExport }: PreviewDialogProps) {
+export function PreviewDialog({ dateFrom, dateTo, status, visitorTypes, visitPurposes, includeCheckout, onExport }: PreviewDialogProps) {
     const [open, setOpen] = useState(false);
     const [loading, setLoading] = useState(false);
     const [preview, setPreview] = useState<Visit[]>([]);
@@ -54,6 +56,8 @@ export function PreviewDialog({ dateFrom, dateTo, status, includeCheckout, onExp
             if (dateFrom) params.date_from = format(dateFrom, 'yyyy-MM-dd');
             if (dateTo) params.date_to = format(dateTo, 'yyyy-MM-dd');
             if (status !== 'all') params.status = status;
+            if (visitorTypes.length > 0) params.visitor_types = visitorTypes;
+            if (visitPurposes.length > 0) params.visit_purposes = visitPurposes;
 
             const response = await axios.post('/exports/preview', params);
 

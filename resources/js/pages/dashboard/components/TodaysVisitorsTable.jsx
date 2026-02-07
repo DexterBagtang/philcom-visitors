@@ -32,6 +32,7 @@ import {
 import { toast } from 'sonner';
 import { playNotificationSound } from '@/lib/notification-sound';
 import DurationTracker from '@/components/shared/DurationTracker.jsx';
+import { MultiSelect } from '@/components/ui/multi-select';
 
 const ValidationDialog = lazy(()=> import('../../visitors/components/ValidationDialog.jsx'));
 const  CheckoutDialog = lazy(()=> import('@/pages/visitors/components/CheckoutDialog.jsx'));
@@ -60,6 +61,29 @@ const STATUS_CONFIG = {
         label: 'Denied',
     },
 };
+
+const VISITOR_TYPE_OPTIONS = [
+    { label: 'Contractor', value: 'Contractor' },
+    { label: 'Vendor', value: 'Vendor' },
+    { label: 'Visitor', value: 'Visitor' },
+    { label: 'Client', value: 'Client' },
+    { label: 'Delivery Personnel', value: 'Delivery Personnel' },
+    { label: 'Applicant', value: 'Applicant' },
+    { label: 'Other', value: 'Other' },
+];
+
+const VISIT_PURPOSE_OPTIONS = [
+    { label: 'Official Business', value: 'Official Business' },
+    { label: 'Meeting', value: 'Meeting' },
+    { label: 'Delivery', value: 'Delivery' },
+    { label: 'Collection', value: 'Collection' },
+    { label: 'Payment', value: 'Payment' },
+    { label: 'Billing', value: 'Billing' },
+    { label: 'Submit Documents/Requirements', value: 'Submit Documents/Requirements' },
+    { label: 'Interview', value: 'Interview' },
+    { label: 'Repair/Maintenance', value: 'Repair/Maintenance' },
+    { label: 'Others', value: 'Others' },
+];
 
 const QUICK_FILTERS = [
     {
@@ -99,6 +123,8 @@ export default function TodaysVisitorsTable({ visitors, activeQuickFilter, onQui
         pageIndex: 0,
         pageSize: 50,
     });
+    const [visitorTypes, setVisitorTypes] = useState([]);
+    const [visitPurposes, setVisitPurposes] = useState([]);
 
     // Dialog state
     const [showValidationDialog, setShowValidationDialog] = useState(false);
@@ -161,8 +187,49 @@ export default function TodaysVisitorsTable({ visitors, activeQuickFilter, onQui
         onQuickFilterChange(null);
         setColumnFilters([]);
         setGlobalFilter('');
+        setVisitorTypes([]);
+        setVisitPurposes([]);
         onClearFilters?.();
     }, [onQuickFilterChange, onClearFilters]);
+
+    // Handle visitor type filter
+    const handleVisitorTypesChange = useCallback((types) => {
+        setVisitorTypes(types);
+        if (types.length > 0) {
+            setColumnFilters(prev => [
+                ...prev.filter(f => f.id !== 'visitor_type'),
+                { id: 'visitor_type', value: types }
+            ]);
+        } else {
+            setColumnFilters(prev => prev.filter(f => f.id !== 'visitor_type'));
+        }
+        setPagination(prev => ({ ...prev, pageIndex: 0 }));
+    }, []);
+
+    // Handle visit purpose filter
+    const handleVisitPurposesChange = useCallback((purposes) => {
+        setVisitPurposes(purposes);
+        if (purposes.length > 0) {
+            setColumnFilters(prev => [
+                ...prev.filter(f => f.id !== 'visit_purpose'),
+                { id: 'visit_purpose', value: purposes }
+            ]);
+        } else {
+            setColumnFilters(prev => prev.filter(f => f.id !== 'visit_purpose'));
+        }
+        setPagination(prev => ({ ...prev, pageIndex: 0 }));
+    }, []);
+
+    // Individual filter removal handlers
+    const handleRemoveVisitorType = useCallback((type) => {
+        const updatedTypes = visitorTypes.filter(t => t !== type);
+        handleVisitorTypesChange(updatedTypes);
+    }, [visitorTypes, handleVisitorTypesChange]);
+
+    const handleRemoveVisitPurpose = useCallback((purpose) => {
+        const updatedPurposes = visitPurposes.filter(p => p !== purpose);
+        handleVisitPurposesChange(updatedPurposes);
+    }, [visitPurposes, handleVisitPurposesChange]);
 
     const handleTableRefresh = useCallback(() => {
         router.get(
@@ -549,6 +616,24 @@ export default function TodaysVisitorsTable({ visitors, activeQuickFilter, onQui
                     return true;
                 },
             },
+            // Virtual column for visitor type filtering
+            {
+                id: 'visitor_type',
+                filterFn: (row, id, value) => {
+                    if (!value || value.length === 0) return true;
+                    const visitorType = row.original.visitor?.type;
+                    return value.includes(visitorType);
+                },
+            },
+            // Virtual column for visit purpose filtering
+            {
+                id: 'visit_purpose',
+                filterFn: (row, id, value) => {
+                    if (!value || value.length === 0) return true;
+                    const visitPurpose = row.original.visitor?.visit_purpose;
+                    return value.includes(visitPurpose);
+                },
+            },
         ],
         [handleValidateVisitor, handleCheckout, handleViewReport, handleDeleteVisitor],
     );
@@ -577,7 +662,7 @@ export default function TodaysVisitorsTable({ visitors, activeQuickFilter, onQui
     });
 
     // Computed values
-    const hasActiveFilters = activeQuickFilter || globalFilter;
+    const hasActiveFilters = activeQuickFilter || globalFilter || visitorTypes.length > 0 || visitPurposes.length > 0;
     const filteredRowsCount = table.getFilteredRowModel().rows.length;
     const totalRowsCount = table.getRowModel().rows.length;
     const currentPageStart = table.getState().pagination.pageIndex * table.getState().pagination.pageSize + 1;
@@ -696,6 +781,26 @@ export default function TodaysVisitorsTable({ visitors, activeQuickFilter, onQui
                                         </button>
                                     );
                                 })}
+
+                                <div className="w-44">
+                                    <MultiSelect
+                                        options={VISITOR_TYPE_OPTIONS}
+                                        selected={visitorTypes}
+                                        onChange={handleVisitorTypesChange}
+                                        placeholder="Visitor Types"
+                                        className="text-sm h-9"
+                                    />
+                                </div>
+
+                                <div className="w-52">
+                                    <MultiSelect
+                                        options={VISIT_PURPOSE_OPTIONS}
+                                        selected={visitPurposes}
+                                        onChange={handleVisitPurposesChange}
+                                        placeholder="Visit Purposes"
+                                        className="text-sm h-9"
+                                    />
+                                </div>
                             </div>
 
                             {/* Pagination controls */}
@@ -742,6 +847,24 @@ export default function TodaysVisitorsTable({ visitors, activeQuickFilter, onQui
                                         </button>
                                     </span>
                                 )}
+
+                                {visitorTypes.map((type) => (
+                                    <span key={type} className="inline-flex items-center gap-1 rounded-md bg-purple-100 px-2 py-1 text-xs text-purple-800">
+                                        Type: {type}
+                                        <button onClick={() => handleRemoveVisitorType(type)} className="hover:text-red-600">
+                                            <X className="h-3 w-3" />
+                                        </button>
+                                    </span>
+                                ))}
+
+                                {visitPurposes.map((purpose) => (
+                                    <span key={purpose} className="inline-flex items-center gap-1 rounded-md bg-green-100 px-2 py-1 text-xs text-green-800">
+                                        Purpose: {purpose}
+                                        <button onClick={() => handleRemoveVisitPurpose(purpose)} className="hover:text-red-600">
+                                            <X className="h-3 w-3" />
+                                        </button>
+                                    </span>
+                                ))}
                             </div>
                         )}
                     </div>
