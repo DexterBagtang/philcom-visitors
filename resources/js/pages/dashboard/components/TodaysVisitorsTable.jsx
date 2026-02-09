@@ -79,7 +79,7 @@ const VISIT_PURPOSE_OPTIONS = [
     { label: 'Collection', value: 'Collection' },
     { label: 'Payment', value: 'Payment' },
     { label: 'Billing', value: 'Billing' },
-    { label: 'Submit Documents/Requirements', value: 'Submit Documents/Requirements' },
+    { label: 'Submit Documents / Requirements', value: 'Submit Documents / Requirements' },
     { label: 'Interview', value: 'Interview' },
     { label: 'Repair/Maintenance', value: 'Repair/Maintenance' },
     { label: 'Others', value: 'Others' },

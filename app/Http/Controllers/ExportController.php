@@ -47,7 +47,7 @@ class ExportController extends Controller
             'visitor_types' => 'nullable|array',
             'visitor_types.*' => 'string|in:Contractor,Vendor,Visitor,Client,Delivery Personnel,Applicant,Other',
             'visit_purposes' => 'nullable|array',
-            'visit_purposes.*' => 'string|in:Official Business,Meeting,Delivery,Collection,Payment,Billing,Submit Documents/Requirements,Interview,Repair/Maintenance,Others',
+            'visit_purposes.*' => 'string|in:Official Business,Meeting,Delivery,Collection,Payment,Billing,Submit Documents / Requirements,Interview,Repair/Maintenance,Others',
         ]);
 
         $dateFrom = $request->input('date_from');
@@ -102,7 +102,7 @@ class ExportController extends Controller
             'visitor_types' => 'nullable|array',
             'visitor_types.*' => 'string|in:Contractor,Vendor,Visitor,Client,Delivery Personnel,Applicant,Other',
             'visit_purposes' => 'nullable|array',
-            'visit_purposes.*' => 'string|in:Official Business,Meeting,Delivery,Collection,Payment,Billing,Submit Documents/Requirements,Interview,Repair/Maintenance,Others',
+            'visit_purposes.*' => 'string|in:Official Business,Meeting,Delivery,Collection,Payment,Billing,Submit Documents / Requirements,Interview,Repair/Maintenance,Others',
         ]);
 
         $query = Visit::with(['visitor', 'latestBadgeAssignment.badge']);
