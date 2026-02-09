@@ -139,6 +139,8 @@ export default function TodaysVisitorsTable({ visitors, activeQuickFilter, onQui
 
     const [columnVisibility, setColumnVisibility] = useState({
         quickFilter: false,
+        visitor_type: false,
+        visit_purpose: false,
     });
 
     // Echo listener for real-time updates
@@ -340,7 +342,7 @@ export default function TodaysVisitorsTable({ visitors, activeQuickFilter, onQui
                         .substring(0, 2);
 
                     return (
-                        <div className="flex items-center space-x-2 w-full max-w-[180px]">
+                        <div className="flex items-center space-x-2 w-full">
                             <div className="flex-shrink-0">
                                 <div
                                     className={`flex h-7 w-7 items-center justify-center rounded-full ${avatarColor} text-xs font-medium text-white`}
@@ -373,7 +375,7 @@ export default function TodaysVisitorsTable({ visitors, activeQuickFilter, onQui
                     </div>
                 ),
                 cell: ({ row }) => (
-                    <div className="max-w-[130px]">
+                    <div>
                         <p className="truncate text-sm font-medium text-slate-900" title={row.getValue('company')}>
                             {row.getValue('company') || 'N/A'}
                         </p>
@@ -391,7 +393,7 @@ export default function TodaysVisitorsTable({ visitors, activeQuickFilter, onQui
                     </div>
                 ),
                 cell: ({ row }) => (
-                    <div className="max-w-[110px]">
+                    <div>
                         <p className="truncate text-sm font-medium text-slate-900" title={row.getValue('person_to_visit')}>
                             {row.getValue('person_to_visit')}
                         </p>
@@ -400,7 +402,7 @@ export default function TodaysVisitorsTable({ visitors, activeQuickFilter, onQui
             },
             {
                 accessorFn: (row) => row.visitor?.visit_purpose,
-                id: 'visit_purpose',
+                id: 'purpose_display',
                 size: 150,
                 header: () => (
                     <div className="flex items-center font-semibold text-slate-700">
@@ -409,9 +411,9 @@ export default function TodaysVisitorsTable({ visitors, activeQuickFilter, onQui
                     </div>
                 ),
                 cell: ({ row }) => (
-                    <div className="max-w-[140px]">
-                        <p className="truncate text-sm text-slate-700" title={row.getValue('visit_purpose')}>
-                            {row.getValue('visit_purpose')}
+                    <div>
+                        <p className="truncate text-sm text-slate-700" title={row.getValue('purpose_display')}>
+                            {row.getValue('purpose_display')}
                         </p>
                     </div>
                 ),
@@ -432,7 +434,7 @@ export default function TodaysVisitorsTable({ visitors, activeQuickFilter, onQui
                     const config = STATUS_CONFIG[status];
 
                     return (
-                        <div className="space-y-1 max-w-[130px]">
+                        <div className="space-y-1">
                             <div className="flex items-center">
                                 <div className={`h-2 w-2 rounded-full ${config.dot} mr-1.5`} />
                                 <Badge className={`${config.color} border px-2 py-0.5 text-xs font-medium truncate`} variant="outline">
@@ -484,7 +486,7 @@ export default function TodaysVisitorsTable({ visitors, activeQuickFilter, onQui
                 cell: ({ row }) => {
                     const date = new Date(row.getValue('check_in_time'));
                     return (
-                        <div className="text-sm max-w-[110px]">
+                        <div className="text-sm">
                             <p className="text-sm font-medium text-slate-900 truncate">
                                 {date.toLocaleDateString([], { month: 'short', day: 'numeric', year: 'numeric' })}
                             </p>
@@ -516,7 +518,7 @@ export default function TodaysVisitorsTable({ visitors, activeQuickFilter, onQui
                     // Only show duration for ongoing and checked_out visits
                     if (status === 'checked_in') {
                         return (
-                            <div className="text-xs text-slate-500 italic max-w-[90px]">
+                            <div className="text-xs text-slate-500 italic">
                                 Pending
                             </div>
                         );
@@ -532,7 +534,7 @@ export default function TodaysVisitorsTable({ visitors, activeQuickFilter, onQui
                     }
 
                     return (
-                        <div className="max-w-[90px]">
+                        <div>
                             <DurationTracker
                                 startTime={visit.check_in_time}
                                 endTime={visit.check_out_time}
@@ -600,7 +602,7 @@ export default function TodaysVisitorsTable({ visitors, activeQuickFilter, onQui
                     };
 
                     return (
-                        <div className="flex justify-center min-w-[120px]" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex justify-center" onClick={(e) => e.stopPropagation()}>
                             {actionMap[status] || <span>-</span>}
                         </div>
                     );
@@ -874,7 +876,7 @@ export default function TodaysVisitorsTable({ visitors, activeQuickFilter, onQui
                 <div className="overflow-hidden rounded-xl border border-slate-200/60 bg-white shadow-sm backdrop-blur-sm">
                     <div className="overflow-x-auto">
                         <div className="relative">
-                            <Table className="w-full min-w-max">
+                            <Table className="w-full table-fixed">
                                 <TableHeader>
                                     {table.getHeaderGroups().map((headerGroup) => (
                                         <TableRow
