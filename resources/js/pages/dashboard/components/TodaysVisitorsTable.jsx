@@ -624,7 +624,24 @@ export default function TodaysVisitorsTable({ visitors, activeQuickFilter, onQui
                 filterFn: (row, id, value) => {
                     if (!value || value.length === 0) return true;
                     const visitorType = row.original.visitor?.type;
-                    return value.includes(visitorType);
+
+                    // Predefined visitor types (excluding "Other")
+                    const PREDEFINED_TYPES = ['Contractor', 'Vendor', 'Visitor', 'Client', 'Delivery Personnel', 'Applicant'];
+
+                    // Check if "Other" is in the selected values
+                    const hasOther = value.includes('Other');
+                    const standardTypes = value.filter(v => v !== 'Other');
+
+                    if (hasOther && standardTypes.length > 0) {
+                        // Include both standard types AND anything not in predefined list
+                        return standardTypes.includes(visitorType) || !PREDEFINED_TYPES.includes(visitorType);
+                    } else if (hasOther) {
+                        // Only "Other" is selected - show everything not in predefined list
+                        return !PREDEFINED_TYPES.includes(visitorType);
+                    } else {
+                        // No "Other" selected - use standard filtering
+                        return standardTypes.includes(visitorType);
+                    }
                 },
             },
             // Virtual column for visit purpose filtering
@@ -633,7 +650,24 @@ export default function TodaysVisitorsTable({ visitors, activeQuickFilter, onQui
                 filterFn: (row, id, value) => {
                     if (!value || value.length === 0) return true;
                     const visitPurpose = row.original.visitor?.visit_purpose;
-                    return value.includes(visitPurpose);
+
+                    // Predefined visit purposes (excluding "Others")
+                    const PREDEFINED_PURPOSES = ['Official Business', 'Meeting', 'Delivery', 'Collection', 'Payment', 'Billing', 'Submit Documents / Requirements', 'Interview', 'Repair/Maintenance'];
+
+                    // Check if "Others" is in the selected values
+                    const hasOthers = value.includes('Others');
+                    const standardPurposes = value.filter(v => v !== 'Others');
+
+                    if (hasOthers && standardPurposes.length > 0) {
+                        // Include both standard purposes AND anything not in predefined list
+                        return standardPurposes.includes(visitPurpose) || !PREDEFINED_PURPOSES.includes(visitPurpose);
+                    } else if (hasOthers) {
+                        // Only "Others" is selected - show everything not in predefined list
+                        return !PREDEFINED_PURPOSES.includes(visitPurpose);
+                    } else {
+                        // No "Others" selected - use standard filtering
+                        return standardPurposes.includes(visitPurpose);
+                    }
                 },
             },
         ],

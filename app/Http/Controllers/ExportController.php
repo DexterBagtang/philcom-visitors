@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Constants\VisitorConstants;
 use App\Exports\VisitsExport;
 use App\Models\Visit;
 use Carbon\Carbon;
@@ -131,13 +132,45 @@ class ExportController extends Controller
 
         if (!empty($visitorTypes)) {
             $query->whereHas('visitor', function($q) use ($visitorTypes) {
-                $q->whereIn('type', $visitorTypes);
+                // Check if "Other" is in the selected types
+                $hasOther = in_array('Other', $visitorTypes);
+                $standardTypes = array_diff($visitorTypes, ['Other']);
+
+                if ($hasOther && !empty($standardTypes)) {
+                    // Include both standard types AND anything not in predefined list
+                    $q->where(function($subQ) use ($standardTypes) {
+                        $subQ->whereIn('type', $standardTypes)
+                            ->orWhereNotIn('type', VisitorConstants::PREDEFINED_VISITOR_TYPES);
+                    });
+                } elseif ($hasOther) {
+                    // Only "Other" is selected - get everything not in predefined list
+                    $q->whereNotIn('type', VisitorConstants::PREDEFINED_VISITOR_TYPES);
+                } else {
+                    // No "Other" selected - use standard filtering
+                    $q->whereIn('type', $standardTypes);
+                }
             });
         }
 
         if (!empty($visitPurposes)) {
             $query->whereHas('visitor', function($q) use ($visitPurposes) {
-                $q->whereIn('visit_purpose', $visitPurposes);
+                // Check if "Others" is in the selected purposes
+                $hasOthers = in_array('Others', $visitPurposes);
+                $standardPurposes = array_diff($visitPurposes, ['Others']);
+
+                if ($hasOthers && !empty($standardPurposes)) {
+                    // Include both standard purposes AND anything not in predefined list
+                    $q->where(function($subQ) use ($standardPurposes) {
+                        $subQ->whereIn('visit_purpose', $standardPurposes)
+                            ->orWhereNotIn('visit_purpose', VisitorConstants::PREDEFINED_VISIT_PURPOSES);
+                    });
+                } elseif ($hasOthers) {
+                    // Only "Others" is selected - get everything not in predefined list
+                    $q->whereNotIn('visit_purpose', VisitorConstants::PREDEFINED_VISIT_PURPOSES);
+                } else {
+                    // No "Others" selected - use standard filtering
+                    $q->whereIn('visit_purpose', $standardPurposes);
+                }
             });
         }
 
